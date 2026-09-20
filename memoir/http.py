@@ -2,12 +2,10 @@
 import json
 import mimetypes
 import re
-import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from pathlib import Path
 from urllib.parse import urlsplit, unquote
 from .domain import validate_edit
-from .scanner import scan
+from .library import Application
 from .storage import read_json
 
 
@@ -24,29 +22,6 @@ def byte_range(header, size):
     if start >= size or end < start:
         raise ValueError('Unsatisfiable range')
     return start, end
-
-
-class Application:
-    def __init__(self, root, repository, web, ffmpeg):
-        self.root = Path(root).resolve()
-        self.repository, self.web, self.ffmpeg = repository, Path(web).resolve(), ffmpeg
-        self.scan_lock = threading.Lock()
-        self.scan_status = {'running': False, 'error': ''}
-
-    def start_scan(self):
-        if not self.scan_lock.acquire(blocking=False):
-            return False
-        self.scan_status = {'running': True, 'error': ''}
-        def run():
-            try:
-                self.repository.replace_index(scan(self.root, self.repository.directory, self.ffmpeg))
-                self.scan_status = {'running': False, 'error': ''}
-            except Exception as exc:
-                self.scan_status = {'running': False, 'error': str(exc)}
-            finally:
-                self.scan_lock.release()
-        threading.Thread(target=run, daemon=True).start()
-        return True
 
 
 def handler_for(app):
@@ -73,7 +48,10 @@ def handler_for(app):
         def do_GET(self):
             route = unquote(urlsplit(self.path).path)
             if route in {'/api/catalog', '/data/catalog.json'}:
-                return self.json_response({**app.repository.catalog(), 'mode': 'library'})
+                try:
+                    return self.json_response({**app.catalog(), 'mode': 'library'})
+                except (OSError, ValueError):
+                    return self.json_response({'error': '素材目录暂不可用，请检查磁盘连接和目录配置'}, 503)
             if route == '/api/status':
                 return self.json_response(app.scan_status)
             if route == '/api/backup':

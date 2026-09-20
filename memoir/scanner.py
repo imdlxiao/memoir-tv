@@ -21,7 +21,11 @@ def scan(root, directory, ffmpeg='ffmpeg', previews=True):
             continue
         relative = path.relative_to(root).as_posix()
         identity = hashlib.sha256(relative.encode('utf-8')).hexdigest()[:20]
-        stat = path.stat()
+        try:
+            stat = path.stat()
+        except FileNotFoundError:
+            # Files can be moved while a directory is being discovered.
+            continue
         date = inferred_date(path.name)
         kind = 'photo' if extension in PHOTO_EXTENSIONS else 'video'
         item = dict(id=identity, path=relative, filename=path.name, kind=kind,
