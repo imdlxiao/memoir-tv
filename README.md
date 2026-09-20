@@ -1,2 +1,97 @@
-# memoir-tv
-局域网回忆录视频播放器，电视浏览器可用
+# 拾光 · Memoir TV
+
+把家庭视频、照片和故事放在一起的私人回忆录。暖白与松绿色的时间流，适配电脑、手机与客厅大屏。素材留在原目录，扫描生成静态索引，补充的故事独立保存。
+
+## 功能
+
+- Twitter 式纵向回忆流、网格视图、时间排序和分批加载。
+- 视频与照片展示、原片播放、进度拖动、全屏，不支持的格式可下载原片。
+- 拍摄时间支持 **精确到天 / 大约某月 / 暂时未知**，自动识别文件名里的明确日期。
+- 标题、故事、地点、标签、珍藏；搜索与年份、地点、标签组合筛选。
+- 浅色 / 深色模式、手机底部导航、电视方向键导航与连续放映。
+- 递归扫描、封面缓存、手动刷新；重新扫描不覆盖人工编辑。
+- 编辑记录导入导出、原子写入与上一版自动备份。
+- 无第三方运行依赖，支持本地服务和纯静态导出。
+
+## 启动
+
+需要 Python 3.10+。FFmpeg 可选，用于生成封面。
+
+1. 复制 `config.example.json` 为 `config.local.json`。
+2. 配置素材目录 `media_root` 和 `ffmpeg` 可执行文件路径。
+3. 双击 `START_MEMOIR.cmd`，或运行：
+
+```powershell
+python -m memoir serve
+```
+
+访问 **http://127.0.0.1:8765**。首次启动先快速生成索引，后台准备封面。也可预先运行 `python -m memoir scan`。
+
+当前电脑已配置 `G:/dcim备份`，本机配置与家庭数据不提交 Git。新增素材放进目录后，在「管理回忆库」点击「刷新回忆库」。素材由文件系统管理，不提供网页上传。
+
+### 手机与电视
+
+设备处于同一可信局域网时，在素材电脑运行：
+
+```powershell
+python -m memoir serve --host 0.0.0.0
+```
+
+访问 `http://素材电脑局域网IP:8765`。在「客厅放映室」中，方向键移动焦点、确认键打开、Esc 返回；播放器使用原生控件，视频结束继续下一段，照片每 8 秒切换。
+
+默认仅监听本机。局域网模式无账号权限，可访问地址的人能查看和编辑记录；不要直接暴露到公网。
+
+## 静态读取与发布
+
+`data/catalog.json` 是扫描索引，`data/memories.json` 是独立编辑记录。服务只是提供原片和 JSON 编辑接口，不需要数据库。视频使用 HTTP Range，不会一次读取整个大文件。
+
+完全静态部署：
+
+```powershell
+python -m memoir export --media-base /family-media/ --out dist
+```
+
+将 `dist` 放到静态服务器，把 `/family-media/` 映射到原始素材目录。媒体前缀也可使用 NAS HTTP(S) 地址或相对地址，保留素材相对目录结构。**导出不复制原片**。以 HTTP 访问，不能双击 HTML 使用 `file://`。
+
+静态模式编辑仅保存于当前浏览器，导出编辑备份后，在素材电脑导入、重新发布即可合并。本地服务模式写入同一份磁盘记录，多设备重新加载后共享更新。详见 [部署说明](docs/DEPLOYMENT.md)。
+
+## 素材与备份
+
+- 扫描视频：MP4、MOV、M4V、WebM、MKV、AVI。
+- 扫描照片：JPG、PNG、WebP、GIF、AVIF、HEIC、HEIF。
+- 能否直接播放取决于浏览器解码能力；MOV/HEVC、HEIC、部分 MKV/AVI 可能需要下载原片。不会自动转码全部大型素材。
+- 未知日期、地点和标签明确显示待补充，不虚构家庭故事。
+- 编辑备份不含原片；完整备份需同时保留素材、`data/memories.json` 和本机配置。
+- ID 来自相对路径，移动或重命名素材会成为新条目，旧编辑记录保留但不会自动关联。
+- `data/memories.backup.json` 保留上一次写入前的记录，不代替长期备份。
+
+## 代码结构
+
+```text
+memoir/
+  domain.py        日期、字段、扩展名与校验
+  storage.py       JSON 仓储、锁、原子写入、备份
+  scanner.py       只读扫描与封面缓存
+  http.py          静态服务、媒体 Range、编辑 API
+  __main__.py      启动、扫描与静态发布 CLI
+web/
+  js/             数据、状态、回忆流、编辑、播放、电视导航
+  styles/         设计变量、响应式布局、组件样式
+  assets/         原创 SVG 品牌、图标和插画
+tests/            领域、存储、协议和隔离浏览器验收
+docs/             架构与部署说明
+```
+
+无需 Node、数据库和前端打包。NAS / 数据库 / 多人权限演进边界见 [架构文档](docs/ARCHITECTURE.md)。
+
+## 验证与开发
+
+```powershell
+python -m unittest discover -s tests -v
+python -m pip install -r requirements-dev.txt
+python tests/browser_smoke.py
+```
+
+浏览器验收需已安装 Chrome，使用临时素材与记录，不修改真实家庭数据。覆盖日期编辑与持久化、搜索、筛选、珍藏、照片、备份恢复、电视、深色模式和 360/390/768/1440/1920 宽度。
+
+主分支 `master`，开发分支 `develop`。按职责使用 `feat：中文描述` / `refactor：中文描述` 提交。作者：**donglixiao**。
