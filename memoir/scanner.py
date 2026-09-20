@@ -4,9 +4,10 @@ import hashlib
 import subprocess
 from pathlib import Path
 from .domain import PHOTO_EXTENSIONS, VIDEO_EXTENSIONS, inferred_date
+from .metadata import read_metadata
 
 
-def scan(root, directory, ffmpeg='ffmpeg', previews=True):
+def scan(root, directory, ffmpeg='ffmpeg', previews=True, exiftool='exiftool'):
     root, directory = Path(root).resolve(), Path(directory)
     if not root.is_dir():
         raise ValueError('素材目录不存在，请检查 config.local.json 中的 media_root')
@@ -32,7 +33,13 @@ def scan(root, directory, ffmpeg='ffmpeg', previews=True):
                     title='', description='', date=date, precision='day' if date else 'unknown',
                     dateSource='filename' if date else 'unknown', location='', tags=[], favorite=False,
                     size=stat.st_size, modified=stat.st_mtime_ns)
-        thumb = thumbnails / f'{identity}-{stat.st_size}-{stat.st_mtime_ns}.jpg'
+        fingerprint = f'{identity}-{stat.st_size}-{stat.st_mtime_ns}'
+        item.update(read_metadata(path, directory, fingerprint, exiftool, extract=previews))
+        if previews and item['metadataStatus'] == 'unavailable' and not any('ExifTool' in warning for warning in warnings):
+            warnings.append('部分原片信息未能读取，请检查 ExifTool 配置后重新扫描；手动标注仍可使用')
+        if item['capture'].get('takenAt'):
+            item.update(date=item['capture']['takenAt'][:10], precision='day', dateSource='embedded')
+        thumb = thumbnails / f'{fingerprint}.jpg'
         if previews and not thumb.exists():
             command = [ffmpeg, '-hide_banner', '-loglevel', 'error', '-y']
             if kind == 'video':

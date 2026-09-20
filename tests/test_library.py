@@ -44,7 +44,7 @@ class LibrarySyncTests(unittest.TestCase):
             app = Application(media, repository, root / 'web', 'ffmpeg')
             entered, release = threading.Event(), threading.Event()
 
-            def slow_scan(root, directory, ffmpeg, previews=True):
+            def slow_scan(root, directory, ffmpeg, previews=True, **kwargs):
                 snapshot = scan(root, directory, ffmpeg, previews=False)
                 if previews:
                     entered.set()

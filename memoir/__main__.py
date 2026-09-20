@@ -26,8 +26,9 @@ def main():
     repository = Repository(ROOT / 'data')
     media = Path(config['media_root']).resolve()
     ffmpeg = config.get('ffmpeg', 'ffmpeg')
+    exiftool = config.get('exiftool', 'exiftool')
     if args.command == 'scan':
-        catalog = scan(media, repository.directory, ffmpeg, not args.no_previews)
+        catalog = scan(media, repository.directory, ffmpeg, not args.no_previews, exiftool)
         repository.replace_index(catalog)
         print(f"Indexed {len(catalog['items'])} memories; {len(catalog['warnings'])} preview warnings.")
     elif args.command == 'export':
@@ -44,7 +45,7 @@ def main():
     else:
         if not repository.index_path.exists():
             repository.replace_index(scan(media, repository.directory, ffmpeg, previews=False))
-        app = Application(media, repository, ROOT / 'web', ffmpeg)
+        app = Application(media, repository, ROOT / 'web', ffmpeg, exiftool)
         app.start_scan()
         serve(app, args.host or config.get('host', '127.0.0.1'), args.port or config.get('port', 8765), args.open)
 

@@ -6,9 +6,10 @@ from .storage import read_json
 
 
 class Application:
-    def __init__(self, root, repository, web, ffmpeg):
+    def __init__(self, root, repository, web, ffmpeg, exiftool='exiftool'):
         self.root = Path(root).resolve()
         self.repository, self.web, self.ffmpeg = repository, Path(web).resolve(), ffmpeg
+        self.exiftool = exiftool
         self.scan_lock = threading.Lock()
         self.catalog_lock = threading.Lock()
         self.scan_status = {'running': False, 'error': ''}
@@ -18,13 +19,13 @@ class Application:
         # for previews, and a finished preview job must not publish stale paths.
         with self.catalog_lock:
             previous = read_json(self.repository.index_path, {'items': []})
-            current = scan(self.root, self.repository.directory, self.ffmpeg, previews=False)
+            current = scan(self.root, self.repository.directory, self.ffmpeg, previews=False, exiftool=self.exiftool)
             previous_files = {
                 (item['id'], item.get('size'), item.get('modified'))
                 for item in previous['items']
             }
             needs_previews = any(
-                not item['thumbnail'] and
+                (not item['thumbnail'] or item.get('metadataStatus') == 'pending') and
                 (item['id'], item['size'], item['modified']) not in previous_files
                 for item in current['items']
             )
@@ -46,7 +47,7 @@ class Application:
         def run():
             try:
                 self._synchronize()
-                previews = scan(self.root, self.repository.directory, self.ffmpeg)
+                previews = scan(self.root, self.repository.directory, self.ffmpeg, exiftool=self.exiftool)
                 # Re-discover membership after the potentially slow preview pass.
                 # A file moved away during decoding cannot reappear in the index.
                 self._synchronize()

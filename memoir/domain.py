@@ -1,10 +1,24 @@
 """Pure media metadata rules, independent of storage and HTTP. Author: donglixiao."""
 import datetime as dt
+import math
 import re
 
 PHOTO_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif', '.heic', '.heif'}
 VIDEO_EXTENSIONS = {'.mp4', '.mov', '.m4v', '.webm', '.mkv', '.avi'}
-EDITABLE = {'title', 'description', 'date', 'precision', 'location', 'tags', 'favorite'}
+EDITABLE = {'title', 'description', 'date', 'precision', 'location', 'tags', 'favorite', 'coordinates'}
+
+
+def validate_coordinates(value):
+    """WGS84 degrees; null explicitly removes an original GPS position."""
+    if value is None:
+        return None
+    if not isinstance(value, dict) or set(value) != {'latitude', 'longitude'}:
+        raise ValueError('请同时填写纬度和经度')
+    for key, limit in [('latitude', 90), ('longitude', 180)]:
+        number = value[key]
+        if isinstance(number, bool) or not isinstance(number, (int, float)) or not math.isfinite(number) or abs(number) > limit:
+            raise ValueError('纬度应在 -90 至 90，经度应在 -180 至 180 之间')
+    return dict(value)
 
 
 def inferred_date(filename):
@@ -22,6 +36,8 @@ def validate_edit(value):
     if not isinstance(value, dict) or set(value) - EDITABLE:
         raise ValueError('包含不支持的回忆字段')
     result = {}
+    if 'coordinates' in value:
+        result['coordinates'] = validate_coordinates(value['coordinates'])
     for key, limit in [('title', 120), ('description', 3000), ('location', 100)]:
         if key in value:
             if not isinstance(value[key], str) or len(value[key]) > limit:
