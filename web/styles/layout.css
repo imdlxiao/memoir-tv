@@ -874,6 +874,27 @@ body.tv-mode .feed-toolbar {
 body.tv-mode .feed-heading h2 {
   font-size: 27px;
 }
+body.tv-mode .card-author,
+body.tv-mode .card-date,
+body.tv-mode .card-details,
+body.tv-mode .card-action,
+body.tv-mode .feed-tabs > button,
+body.tv-mode .search-field input,
+body.tv-mode .filter-button,
+body.tv-mode .quiet-button,
+body.tv-mode .tv-exit {
+  font-size: 16px;
+}
+body.tv-mode .card-actions {
+  gap: 20px;
+}
+body.tv-mode .card-action {
+  min-height: 44px;
+}
+body.tv-mode .card-action svg {
+  width: 22px;
+  height: 22px;
+}
 body.tv-mode .breadcrumb {
   display: block;
   font-size: 17px;

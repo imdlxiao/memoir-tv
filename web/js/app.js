@@ -247,7 +247,8 @@ $('#feed').onclick = async (event) => {
   const item = state.items.find((i) => i.id === button.closest('[data-id]')?.dataset.id);
   if (!item) return;
   if (button.dataset.action === 'open') openViewer(filteredItems(), item.id);
-  if (button.dataset.action === 'edit') editMemory(item, render);
+  if (button.dataset.action === 'edit')
+    editMemory(item, () => refresh().catch((error) => toast(error.message)));
   if (button.dataset.action === 'tag') filter('tag', button.dataset.tag);
   if (button.dataset.action === 'favorite') {
     button.disabled = true;
@@ -278,7 +279,7 @@ async function watchInitialScan() {
   if (state.mode !== 'library') return;
   try {
     const status = await scanStatus();
-    if (status.running) {
+    if (status.running || document.querySelector('dialog[open]')) {
       setTimeout(watchInitialScan, 2000);
     } else if (!status.error) {
       const catalog = await loadCatalog();

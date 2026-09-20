@@ -46,6 +46,7 @@ export function getMode() {
   return mode;
 }
 export async function saveMemory(id, changes) {
+  validateBackup({ version: 1, memories: { [id]: changes } });
   if (mode === 'library')
     return request(`/api/memories/${encodeURIComponent(id)}`, 'PATCH', changes);
   const edits = localEdits();
@@ -109,7 +110,24 @@ function validateBackup(value) {
       throw new Error('标签格式无效');
     if ('precision' in edit && !['day', 'month', 'unknown'].includes(edit.precision))
       throw new Error('日期精度无效');
-    if (edit.date && !/^\d{4}-\d{2}(-\d{2})?$/.test(edit.date)) throw new Error('日期格式无效');
+    if ('date' in edit || 'precision' in edit) {
+      const precision = edit.precision || 'unknown';
+      const value = edit.date || '';
+      if (precision === 'unknown') {
+        if (value) throw new Error('未知日期不能包含具体时间');
+      } else {
+        const pattern = precision === 'month' ? /^\d{4}-\d{2}$/ : /^\d{4}-\d{2}-\d{2}$/;
+        const full = precision === 'month' ? value + '-01' : value;
+        const parsed = new Date(full + 'T12:00:00Z');
+        if (
+          !pattern.test(value) ||
+          Number(value.slice(0, 4)) < 1 ||
+          Number.isNaN(parsed.valueOf()) ||
+          parsed.toISOString().slice(0, 10) !== full
+        )
+          throw new Error('拍摄日期不存在或精度不匹配');
+      }
+    }
   }
 }
 export async function importBackup(value) {

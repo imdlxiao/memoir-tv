@@ -7,12 +7,14 @@ import json
 import sys
 import tempfile
 import threading
-from http.server import ThreadingHTTPServer
+from functools import partial
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from memoir.http import Application, handler_for
+from memoir.exporter import export_static
 from memoir.scanner import scan
 from memoir.storage import Repository
 from playwright.sync_api import sync_playwright, expect
@@ -63,6 +65,7 @@ def main():
                 page.locator('[data-action=reset]').click()
                 page.locator('.memory-card').first.locator('.media-frame').click()
                 expect(page.locator('#viewer-dialog img')).to_be_visible()
+                page.wait_for_function("document.querySelector('#viewer-dialog img').naturalWidth > 0")
                 page.keyboard.press('Escape')
                 expect(page.locator('#viewer-dialog')).not_to_be_visible()
                 page.locator('#library-button').click()
@@ -89,8 +92,32 @@ def main():
                 page.locator('#theme-button').click()
                 expect(page.locator('html')).to_have_attribute('data-theme','dark')
                 assert not errors, errors
+                # A nested, entirely static site must preserve edits without an API.
+                export_static(ROOT / 'web', repository, media, '../media/', root / 'album')
+                static_server = ThreadingHTTPServer(('127.0.0.1', 0), partial(SimpleHTTPRequestHandler, directory=str(root)))
+                threading.Thread(target=static_server.serve_forever, daemon=True).start()
+                try:
+                    page.goto(f'http://127.0.0.1:{static_server.server_port}/album/')
+                    expect(page.locator('.memory-card')).to_have_count(2)
+                    page.locator('.memory-card').first.locator('[data-action=edit]').first.click()
+                    page.locator('[name=title]').fill('仅保存在静态浏览器')
+                    page.locator('#editor-dialog [type=submit]').click()
+                    expect(page.locator('#editor-dialog')).not_to_be_visible()
+                    page.reload()
+                    expect(page.locator('.card-title').first).to_have_text('仅保存在静态浏览器')
+                    assert repository.catalog()['items'][0]['title'] == '测试回忆'
+                    page.locator('.memory-card').first.locator('.media-frame').click()
+                    page.wait_for_function("document.querySelector('#viewer-dialog img').naturalWidth > 0")
+                    page.keyboard.press('Escape')
+                    page.locator('.memory-card').nth(1).locator('.media-frame').click()
+                    expect(page.locator('.viewer-error')).to_be_visible()
+                    page.keyboard.press('Escape')
+                    assert not errors, errors
+                finally:
+                    static_server.shutdown()
+                    static_server.server_close()
                 browser.close()
-                print('PASS: editing, month precision, persistence, favorites, search, filters, photo viewer, backup/import, TV, dark theme, 5 viewport widths; no JS errors.')
+                print('PASS: editing, month precision, persistence, favorites, search, filters, photo viewer, backup/import, TV, dark theme, 5 viewport widths, nested static export, static edits, unsupported video fallback; no JS errors.')
         finally:
             server.shutdown()
             server.server_close()
