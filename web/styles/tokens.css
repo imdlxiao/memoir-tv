@@ -1,5 +1,145 @@
 /* Author: donglixiao · Design tokens and accessible foundations. */
-:root{color-scheme:light;--bg:#f6f7f2;--surface:#fffefa;--paper:#fff;--text:#29372d;--muted:#899086;--subtle:#687363;--line:#e7eae1;--green:#496d51;--green-soft:#edf2e8;--hero:#eaf0df;--gold:#b6925b;--shadow:0 18px 70px #26372a16;--radius:18px;--font:"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif}
-:root[data-theme=dark]{color-scheme:dark;--bg:#141b17;--surface:#1c251e;--paper:#212c23;--text:#e3e9dc;--muted:#94a18e;--subtle:#b2bfa9;--line:#303e32;--green:#b2c99c;--green-soft:#2b3b2b;--hero:#2a392a;--gold:#d5b986;--shadow:0 18px 70px #0004}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.65 var(--font);-webkit-font-smoothing:antialiased}button,input,select,textarea{font:inherit}button,a,input,select,textarea{-webkit-tap-highlight-color:transparent}button{color:inherit;cursor:pointer}button{border:0;background:none}button:disabled{cursor:wait;opacity:.55}a{color:inherit;text-decoration:none}input,select,textarea{color:var(--text)}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--green);outline-offset:4px}button:focus:not(:focus-visible){outline:none}svg.icon{width:20px;height:20px;display:block;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}h1,h2,h3,p{margin:0}button,input,textarea,select{touch-action:manipulation}[hidden]{display:none!important}::selection{background:#cfdcc0;color:#263d2d}.skip-link{position:fixed;left:12px;top:-100px;background:var(--paper);padding:12px;z-index:100}.skip-link:focus{top:12px}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
-@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+:root {
+  color-scheme: light;
+  --bg: #f6f7f2;
+  --surface: #fffefa;
+  --paper: #fff;
+  --text: #29372d;
+  --muted: #899086;
+  --subtle: #687363;
+  --line: #e7eae1;
+  --green: #496d51;
+  --green-soft: #edf2e8;
+  --hero: #eaf0df;
+  --gold: #b6925b;
+  --shadow: 0 18px 70px #26372a16;
+  --radius: 18px;
+  --font: 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+}
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #141b17;
+  --surface: #1c251e;
+  --paper: #212c23;
+  --text: #e3e9dc;
+  --muted: #94a18e;
+  --subtle: #b2bfa9;
+  --line: #303e32;
+  --green: #b2c99c;
+  --green-soft: #2b3b2b;
+  --hero: #2a392a;
+  --gold: #d5b986;
+  --shadow: 0 18px 70px #0004;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.65 var(--font);
+  -webkit-font-smoothing: antialiased;
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+button {
+  color: inherit;
+  cursor: pointer;
+}
+button {
+  border: 0;
+  background: none;
+}
+button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+input,
+select,
+textarea {
+  color: var(--text);
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid var(--green);
+  outline-offset: 4px;
+}
+button:focus:not(:focus-visible) {
+  outline: none;
+}
+svg.icon {
+  width: 20px;
+  height: 20px;
+  display: block;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+button,
+input,
+textarea,
+select {
+  touch-action: manipulation;
+}
+[hidden] {
+  display: none !important;
+}
+::selection {
+  background: #cfdcc0;
+  color: #263d2d;
+}
+.skip-link {
+  position: fixed;
+  left: 12px;
+  top: -100px;
+  background: var(--paper);
+  padding: 12px;
+  z-index: 100;
+}
+.skip-link:focus {
+  top: 12px;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *:before,
+  *:after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
