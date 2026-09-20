@@ -1,0 +1,2 @@
+# Author: donglixiao · Optional browser verification; runtime uses the standard library.
+playwright==1.63.0
