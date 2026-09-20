@@ -65,7 +65,8 @@ def handler_for(app):
                 except (OSError, ValueError):
                     return self.json_response({'error': '素材目录暂不可用，请检查磁盘连接和目录配置'}, 503)
             if route == '/api/status':
-                return self.json_response(app.scan_status)
+                return self.json_response({**app.scan_status, 'storage': {
+                    'mediaRoot': str(app.root), 'dataRoot': str(app.repository.directory.resolve())}})
             if route == '/api/backup':
                 return self.json_response({'version': 1, 'memories': read_json(app.repository.edits_path, {})})
             if route.startswith('/media/'):
@@ -85,9 +86,9 @@ def handler_for(app):
                 path = (base / (route.lstrip('/') or 'index.html')).resolve()
             if not path.is_relative_to(base):
                 return self.json_response({'error': '无效路径'}, 403)
-            self.serve_file(path)
+            self.serve_file(path, 'private, max-age=31536000, immutable' if route.startswith('/thumbnails/') else 'no-cache')
 
-        def serve_file(self, path):
+        def serve_file(self, path, cache_control='no-cache'):
             if not path.is_file():
                 return self.json_response({'error': '文件不存在'}, 404)
             try:
@@ -110,7 +111,7 @@ def handler_for(app):
                     self.send_header('Content-Length', str(end - start + 1))
                     self.send_header('Accept-Ranges', 'bytes')
                     self.send_header('X-Content-Type-Options', 'nosniff')
-                    self.send_header('Cache-Control', 'no-cache')
+                    self.send_header('Cache-Control', cache_control)
                     if status == 206:
                         self.send_header('Content-Range', f'bytes {start}-{end}/{size}')
                     self.end_headers()

@@ -1,4 +1,18 @@
 /* Author: donglixiao · Collection tools, rediscovery, and comfortable playback. */
+.storage-location .storage-path,
+.storage-location .storage-data-path {
+  overflow-wrap: anywhere;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--green-soft);
+  color: var(--green);
+  user-select: all;
+}
+.storage-location summary {
+  cursor: pointer;
+  color: var(--subtle);
+}
 .progress-badge {
   position: absolute;
   right: 12px;

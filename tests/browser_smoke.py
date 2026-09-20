@@ -83,6 +83,7 @@ def main():
                 page.keyboard.press('Escape')
                 expect(page.locator('#viewer-dialog')).not_to_be_visible()
                 page.locator('#library-button').click()
+                expect(page.locator('.storage-path')).to_have_text(str(media.resolve()))
                 with page.expect_download() as download:
                     page.locator('#export-backup').click()
                 backup_path = root / 'backup.json'
