@@ -18,6 +18,7 @@ from memoir.exporter import export_static
 from memoir.scanner import scan
 from memoir.storage import Repository
 from playwright.sync_api import sync_playwright, expect
+from browser_support import launch_browser
 
 
 def main():
@@ -34,7 +35,7 @@ def main():
         threading.Thread(target=server.serve_forever, daemon=True).start()
         try:
             with sync_playwright() as p:
-                browser = p.chromium.launch(channel='chrome', headless=True)
+                browser = launch_browser(p)
                 page = browser.new_page(viewport={'width':1440, 'height':1050})
                 errors = []
                 page.on('pageerror', lambda error: errors.append(str(error)))
