@@ -1,7 +1,6 @@
 """Read-only media discovery and optional preview generation. Author: donglixiao."""
 import datetime as dt
 import hashlib
-import re
 import subprocess
 from pathlib import Path
 from .domain import PHOTO_EXTENSIONS, VIDEO_EXTENSIONS, inferred_date

@@ -72,6 +72,7 @@ memoir/
   domain.py        日期、字段、扩展名与校验
   storage.py       JSON 仓储、锁、原子写入、备份
   scanner.py       只读扫描与封面缓存
+  exporter.py      合并数据与纯静态站点发布
   http.py          静态服务、媒体 Range、编辑 API
   __main__.py      启动、扫描与静态发布 CLI
 web/
@@ -92,6 +93,6 @@ python -m pip install -r requirements-dev.txt
 python tests/browser_smoke.py
 ```
 
-浏览器验收需已安装 Chrome，使用临时素材与记录，不修改真实家庭数据。覆盖日期编辑与持久化、搜索、筛选、珍藏、照片、备份恢复、电视、深色模式和 360/390/768/1440/1920 宽度。
+浏览器验收需已安装 Chrome，使用临时素材与记录，不修改真实家庭数据。覆盖日期编辑与持久化、搜索、筛选、珍藏、照片、备份恢复、电视、深色模式和 360/390/768/1440/1920 宽度，以及子路径静态部署、静态编辑持久化和不支持的视频格式回退。验收结果见 [VALIDATION.md](docs/VALIDATION.md)。
 
 主分支 `master`，开发分支 `develop`。按职责使用 `feat：中文描述` / `refactor：中文描述` 提交。作者：**donglixiao**。

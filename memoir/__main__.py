@@ -1,12 +1,11 @@
 """Command line entry point and static publishing. Author: donglixiao."""
 import argparse
 import json
-import shutil
 from pathlib import Path
-from urllib.parse import quote
+from .exporter import export_static
 from .http import Application, serve
 from .scanner import scan
-from .storage import Repository, atomic_json
+from .storage import Repository
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -36,17 +35,10 @@ def main():
         if not repository.index_path.exists():
             parser.error('请先运行 python -m memoir scan')
         out = args.out.resolve()
-        if out == ROOT or out.is_relative_to(ROOT / 'web') or media == out or media.is_relative_to(out) or out.is_relative_to(media):
-            parser.error('导出目录不能覆盖项目或原始素材')
-        shutil.copytree(ROOT / 'web', out, dirs_exist_ok=True)
-        shutil.copytree(repository.directory / 'thumbnails', out / 'thumbnails', dirs_exist_ok=True)
-        catalog = repository.catalog()
-        for item in catalog['items']:
-            item['url'] = args.media_base.rstrip('/') + '/' + quote(item.pop('path'), safe='/')
-            if item.get('thumbnail'):
-                item['thumbnail'] = '.' + item['thumbnail']
-        catalog['mode'] = 'static'
-        atomic_json(out / 'data' / 'catalog.json', catalog)
+        try:
+            export_static(ROOT / 'web', repository, media, args.media_base, out)
+        except ValueError as exc:
+            parser.error(str(exc))
         print(f'Static site exported to {out}')
     else:
         if not repository.index_path.exists():
