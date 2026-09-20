@@ -1,0 +1,11 @@
+# Author: donglixiao
+__pycache__/
+*.py[cod]
+.venv/
+.local/
+data/
+config.local.json
+dist/
+test-results/
+.DS_Store
+

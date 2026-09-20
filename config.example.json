@@ -1,0 +1,6 @@
+{
+  "media_root": "G:/dcim备份",
+  "host": "127.0.0.1",
+  "port": 8765,
+  "ffmpeg": "ffmpeg"
+}
