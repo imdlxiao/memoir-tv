@@ -2,6 +2,8 @@
 import { icon } from './icons.js';
 import { $, escapeHTML as e, dateLabel, titleOf, safeURL } from './utils.js';
 import { state, filteredItems } from './store.js';
+import { renderSelection } from './batch.js';
+import { readProgress, clockLabel } from './progress.js';
 function card(item) {
   const name = titleOf(item),
     isVideo = item.kind === 'video';
@@ -15,7 +17,7 @@ export function renderFeed() {
   feed.setAttribute('aria-busy', 'false');
   $('#result-count').textContent = items.length;
   if (!items.length) {
-    const filtered = state.query || state.year || state.location || state.tag;
+    const filtered = state.query || state.year || state.month || state.location || state.tag;
     const messages = {
       photo: ['相片的位置，给美好留着', '把照片放进素材目录，刷新回忆库后就会出现在这里。'],
       favorites: ['把舍不得的瞬间，珍藏起来', '轻点回忆下的爱心，下次想念时就能更快找到。'],
@@ -33,6 +35,7 @@ export function renderFeed() {
   $('#feed-end').hidden = !items.length || items.length > state.limit;
   const chips = [
     ['year', state.year === 'unknown' ? '日期待补充' : state.year],
+    ['month', state.month ? `${Number(state.month)} 月` : ''],
     ['location', state.location],
     ['tag', state.tag],
   ];
@@ -41,6 +44,17 @@ export function renderFeed() {
     .map(([key, value]) => `<button class="filter-chip" data-clear="${key}">${e(value)} ×</button>`)
     .join('');
   $('#filter-dot').hidden = !chips.some(([, value]) => value);
+  renderSelection();
+  for (const item of items.slice(0, state.limit)) {
+    const progress = readProgress(item);
+    if (!progress) continue;
+    const card = feed.querySelector(`[data-id="${item.id}"]`);
+    if (!card) continue;
+    const badge = document.createElement('span');
+    badge.className = 'progress-badge';
+    badge.textContent = `看到 ${clockLabel(progress.time)}`;
+    $('.media-frame', card).append(badge);
+  }
   feed.querySelectorAll('img').forEach((img) =>
     img.addEventListener(
       'error',

@@ -6,11 +6,14 @@ export const state = {
   type: 'all',
   query: '',
   year: '',
+  month: '',
   location: '',
   tag: '',
   ascending: false,
   limit: 12,
   grid: false,
+  selecting: false,
+  selected: new Set(),
 };
 export function filteredItems() {
   const query = state.query.trim().toLocaleLowerCase();
@@ -26,6 +29,7 @@ export function filteredItems() {
       )
         return false;
       if (state.location && item.location !== state.location) return false;
+      if (state.month && item.date?.slice(5, 7) !== state.month) return false;
       if (state.tag && !(item.tags || []).includes(state.tag)) return false;
       return (
         !query ||

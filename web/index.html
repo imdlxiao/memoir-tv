@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="./styles/tokens.css" />
     <link rel="stylesheet" href="./styles/layout.css" />
     <link rel="stylesheet" href="./styles/components.css" />
+    <link rel="stylesheet" href="./styles/features.css" />
     <script type="module" src="./js/app.js"></script>
   </head>
   <body>
@@ -102,15 +103,25 @@
             height="246"
           />
         </section>
+        <section class="rediscover-strip" aria-label="重温回忆">
+          <span>偶尔，也回头看看</span>
+          <button id="resume-button" hidden><span data-icon="play"></span>接着看</button>
+          <button id="anniversary-button"><span data-icon="calendar"></span>往年今日</button>
+          <button id="random-button"><span data-icon="sparkles"></span>随便看看</button>
+        </section>
         <section class="feed-toolbar" aria-label="回忆筛选">
           <div class="feed-heading">
             <div>
               <h2 id="feed-title">每一刻，都算数 <span id="result-count">0</span></h2>
               <p id="feed-subtitle">沿着时间，重逢那些小美好</p>
             </div>
-            <button class="quiet-button" id="sort-button">
-              <span data-icon="sort"></span><span>从新到旧</span>
-            </button>
+            <div class="heading-tools">
+              <button class="quiet-button" id="batch-toggle" aria-pressed="false">
+                <span data-icon="edit"></span>批量整理</button
+              ><button class="quiet-button" id="sort-button">
+                <span data-icon="sort"></span><span>从新到旧</span>
+              </button>
+            </div>
           </div>
           <div class="filter-row">
             <label class="search-field"
@@ -130,6 +141,10 @@
             <label
               >拍摄年份<select id="year-filter">
                 <option value="">所有年份</option>
+              </select></label
+            ><label
+              >拍摄月份<select id="month-filter">
+                <option value="">所有月份</option>
               </select></label
             ><label
               >回忆发生地<select id="location-filter">
@@ -165,6 +180,13 @@
           </div>
         </section>
         <div id="active-filters" class="active-filters"></div>
+        <div id="batch-toolbar" class="batch-toolbar" hidden aria-label="批量整理操作">
+          <strong id="selection-count" role="status">已选 0 条</strong>
+          <button id="select-page">选择已显示</button
+          ><button id="clear-selection">清空选择</button>
+          <button id="batch-edit" class="primary-button" disabled>编辑所选</button
+          ><button id="batch-cancel" aria-label="退出批量整理">退出</button>
+        </div>
         <section id="feed" class="feed" aria-label="家庭回忆流" aria-busy="true">
           <div class="loading-state">
             <span class="loading-flower">✳</span>
@@ -233,6 +255,8 @@
     <dialog id="editor-dialog" class="editor-dialog" aria-label="编辑回忆"></dialog>
     <dialog id="viewer-dialog" class="viewer-dialog" aria-label="回忆放映室"></dialog>
     <dialog id="library-dialog" class="library-dialog" aria-label="管理回忆库"></dialog>
+    <dialog id="batch-dialog" class="editor-dialog" aria-label="批量整理回忆"></dialog>
+    <dialog id="discovery-dialog" class="discovery-dialog" aria-label="往年今日"></dialog>
     <div id="toast" role="status" class="toast" hidden></div>
     <noscript><p class="noscript">请开启 JavaScript 来浏览家庭回忆录。</p></noscript>
   </body>

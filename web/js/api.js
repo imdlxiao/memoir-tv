@@ -66,6 +66,36 @@ export async function backup() {
     memories[id] = { ...memories[id], ...edit };
   return { version: 1, memories };
 }
+export async function saveBatch(ids, changes, tagMode = 'append') {
+  ids = [...new Set(ids)];
+  if (!ids.length || ids.length > 200) throw new Error('每次请选择 1 至 200 条回忆');
+  if (!['append', 'replace', 'remove'].includes(tagMode)) throw new Error('标签操作不正确');
+  if (
+    !Object.keys(changes).length ||
+    Object.keys(changes).some(
+      (key) => !['date', 'precision', 'location', 'tags', 'favorite'].includes(key),
+    )
+  )
+    throw new Error('请选择要修改的字段');
+  if (mode === 'library') return request('/api/batch', 'POST', { ids, changes, tagMode });
+  const edits = localEdits(),
+    updates = {};
+  for (const id of ids) {
+    const item = currentCatalog.find((item) => item.id === id);
+    if (!item) throw new Error('部分回忆已不在列表，请刷新后重试');
+    const patch = { ...changes };
+    if ('tags' in patch) {
+      const existing = edits[id]?.tags || item.tags || [];
+      if (tagMode === 'append') patch.tags = [...new Set([...existing, ...patch.tags])];
+      if (tagMode === 'remove') patch.tags = existing.filter((tag) => !patch.tags.includes(tag));
+    }
+    updates[id] = patch;
+  }
+  validateBackup({ version: 1, memories: updates });
+  for (const [id, patch] of Object.entries(updates)) edits[id] = { ...edits[id], ...patch };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(edits));
+  return { count: ids.length };
+}
 function validateBackup(value) {
   if (
     value?.version !== 1 ||

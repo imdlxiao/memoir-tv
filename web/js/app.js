@@ -9,6 +9,9 @@ import { openViewer, initializeViewer } from './viewer.js';
 import { openLibrary } from './library.js';
 import { setTV, initializeTV } from './tv.js';
 import { startLibrarySync } from './sync.js';
+import { initializeBatch, toggleSelection } from './batch.js';
+import { initializeDiscovery, updateDiscovery } from './discovery.js';
+import { preferences, savePreference } from './preferences.js';
 
 const viewNames = {
   all: '所有回忆',
@@ -17,6 +20,9 @@ const viewNames = {
   favorites: '我的珍藏',
   undated: '待补日期',
 };
+const savedPreferences = preferences();
+state.grid = savedPreferences.grid;
+state.ascending = savedPreferences.ascending;
 function renderOverview() {
   $('#nav-count').textContent = state.items.length;
   $('#undated-count').textContent = state.items.filter((i) => !i.date).length;
@@ -49,6 +55,16 @@ function renderOverview() {
     : '<p class="sidebar-empty">给回忆一个小主题，<br>下次想念时，更容易找到。</p>';
   for (const [selector, values, field, label] of [
     ['#year-filter', years, 'year', '所有年份'],
+    [
+      '#month-filter',
+      Array.from({ length: 12 }, (_, i) => [
+        String(i + 1).padStart(2, '0'),
+        state.items.filter((item) => item.date?.slice(5, 7) === String(i + 1).padStart(2, '0'))
+          .length,
+      ]).filter(([, count]) => count),
+      'month',
+      '所有月份',
+    ],
     ['#location-filter', places, 'location', '所有地点'],
     ['#tag-filter', tags, 'tag', '所有标签'],
   ]) {
@@ -57,7 +73,7 @@ function renderOverview() {
       values
         .map(
           ([value, count]) =>
-            `<option value="${e(value)}">${e(value === 'unknown' ? '日期待补充' : value)} (${count})</option>`,
+            `<option value="${e(value)}">${e(value === 'unknown' ? '日期待补充' : field === 'month' ? Number(value) + ' 月' : value)} (${count})</option>`,
         )
         .join('');
     $(selector).value = state[field];
@@ -73,6 +89,7 @@ function renderOverview() {
 function render() {
   renderOverview();
   renderFeed();
+  updateDiscovery();
 }
 async function refresh(background = false) {
   const catalog = await loadCatalog();
@@ -90,6 +107,7 @@ async function refresh(background = false) {
 function resetFilters() {
   state.query = '';
   state.year = '';
+  state.month = '';
   state.location = '';
   state.tag = '';
   state.type = 'all';
@@ -133,6 +151,9 @@ hydrateIcons();
 document.querySelectorAll('dialog').forEach(setupDialog);
 initializeViewer();
 initializeTV();
+initializeBatch(renderFeed, refresh);
+initializeDiscovery();
+$('#viewer-dialog').addEventListener('close', render);
 const now = new Date();
 $('#today-date').innerHTML =
   `${String(now.getMonth() + 1).padStart(2, '0')}<span style="opacity:.4"> / </span>${String(now.getDate()).padStart(2, '0')}<small>${['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'][now.getDay()]}</small>`;
@@ -174,6 +195,7 @@ $('#filter-toggle').onclick = () => {
 };
 for (const [selector, field] of [
   ['#year-filter', 'year'],
+  ['#month-filter', 'month'],
   ['#location-filter', 'location'],
   ['#tag-filter', 'tag'],
 ])
@@ -187,6 +209,7 @@ $('#reset-filters').onclick = () => {
 };
 $('#sort-button').onclick = () => {
   state.ascending = !state.ascending;
+  savePreference('ascending', state.ascending);
   $('#sort-button').innerHTML =
     `${icon('sort')}<span>${state.ascending ? '从旧到新' : '从新到旧'}</span>`;
   renderFeed();
@@ -214,6 +237,7 @@ $('.feed-tabs').onclick = (event) => {
 };
 function setGrid(grid) {
   state.grid = grid;
+  savePreference('grid', grid);
   $('#grid-view').classList.toggle('active', grid);
   $('#list-view').classList.toggle('active', !grid);
   $('#grid-view').setAttribute('aria-pressed', grid);
@@ -222,6 +246,12 @@ function setGrid(grid) {
 }
 $('#grid-view').onclick = () => setGrid(true);
 $('#list-view').onclick = () => setGrid(false);
+$('#grid-view').classList.toggle('active', state.grid);
+$('#list-view').classList.toggle('active', !state.grid);
+$('#grid-view').setAttribute('aria-pressed', state.grid);
+$('#list-view').setAttribute('aria-pressed', !state.grid);
+$('#sort-button').innerHTML =
+  `${icon('sort')}<span>${state.ascending ? '从旧到新' : '从新到旧'}</span>`;
 $('#load-more').onclick = () => {
   const firstNew = state.limit;
   state.limit += 12;
@@ -253,6 +283,10 @@ $('#feed').onclick = async (event) => {
   }
   const item = state.items.find((i) => i.id === button.closest('[data-id]')?.dataset.id);
   if (!item) return;
+  if (button.dataset.action === 'select' || (state.selecting && button.dataset.action === 'open')) {
+    toggleSelection(item.id, renderFeed);
+    return;
+  }
   if (button.dataset.action === 'open') openViewer(filteredItems(), item.id);
   if (button.dataset.action === 'edit')
     editMemory(item, () => refresh().catch((error) => toast(error.message)));
