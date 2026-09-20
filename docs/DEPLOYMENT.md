@@ -8,7 +8,8 @@
 
 ```json
 {
-  "media_root": "G:/dcim备份",
+  "media_root": "F:/家庭回忆库/原片",
+  "data_root": "data",
   "host": "127.0.0.1",
   "port": 8765,
   "ffmpeg": "C:/tools/ffmpeg/bin/ffmpeg.exe",
@@ -17,6 +18,8 @@
 ```
 
 保存为不入库的 `config.local.json`，运行 `python -m memoir serve`。默认仅本机可访问 `http://127.0.0.1:8765`。`--port` 可改端口；Windows 快捷启动脚本读取配置，在服务就绪后自动打开对应地址。
+
+`data_root` 默认为项目内 `data`，也可指定绝对路径，例如 `F:/家庭回忆库/索引与缓存`；相对路径以项目目录为基准。切换前须迁移旧索引、编辑记录、身份映射和缓存。原片按年月分层的方案见 [STORAGE.md](STORAGE.md)。
 
 手机、电视使用同一可信局域网时，显式运行 `python -m memoir serve --host 0.0.0.0`，访问 `http://素材电脑局域网IP:8765`。需要时在防火墙允许专用网络访问。当前没有账号权限，能访问地址的人可以查看和编辑记录，不要直接映射到公网。
 
