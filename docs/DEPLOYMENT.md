@@ -4,14 +4,15 @@
 
 ## 本地与局域网
 
-需要 Python 3.10+；FFmpeg 可选，用于封面生成。
+需要 Python 3.10+；FFmpeg 可选，用于封面生成；ExifTool 可选，用于读取原片信息和 GPS，安装说明见 [MAPS.md](MAPS.md)。
 
 ```json
 {
   "media_root": "G:/dcim备份",
   "host": "127.0.0.1",
   "port": 8765,
-  "ffmpeg": "C:/tools/ffmpeg/bin/ffmpeg.exe"
+  "ffmpeg": "C:/tools/ffmpeg/bin/ffmpeg.exe",
+  "exiftool": "C:/tools/exiftool/exiftool.exe"
 }
 ```
 

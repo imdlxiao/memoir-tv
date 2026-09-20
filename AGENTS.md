@@ -8,5 +8,6 @@
 - 前端按数据访问、状态查询、展示、编辑、播放、回忆库管理、电视导航拆分，不把所有功能放进 `app.js`。
 - 原始素材只读。家庭索引、封面、编辑记录、本机配置、测试截图不得提交 Git。
 - 未知拍摄时间保持未知；月精度不伪装成某一天。重新扫描不得覆盖人工编辑。
-- 运行 `python -m unittest discover -s tests -v`；涉及交互时运行 `python tests/browser_smoke.py` 和 `python tests/browser_features.py`。测试使用临时目录，不修改真实家庭记录。
+- 运行 `python -m unittest discover -s tests -v`；涉及交互时运行 `python tests/browser_smoke.py`、`python tests/browser_features.py` 和 `python tests/browser_map.py`。测试使用临时目录，不修改真实家庭记录。地图测试必须拦截外部瓦片请求。
 - 前端格式遵循 `.prettierrc.json`。当前运行环境不依赖 Node、数据库或 Python 第三方包。
+- 地图依赖 Leaflet 1.9.4 本地副本；第三方文件保留原作者与许可。ExifTool 为可选本机工具，只读提取原片信息；不得将家庭照片或 GPS 发送到地理编码接口。
