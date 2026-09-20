@@ -1,13 +1,14 @@
 /* Author: donglixiao · Application composition and event coordination. */
 import { hydrateIcons, icon } from './icons.js';
 import { $, escapeHTML as e, toast, setupDialog } from './utils.js';
-import { loadCatalog, saveMemory, scanStatus } from './api.js';
+import { loadCatalog, saveMemory } from './api.js';
 import { state, filteredItems, counts } from './store.js';
 import { renderFeed } from './feed.js';
 import { editMemory } from './editor.js';
 import { openViewer, initializeViewer } from './viewer.js';
 import { openLibrary } from './library.js';
 import { setTV, initializeTV } from './tv.js';
+import { startLibrarySync } from './sync.js';
 
 const viewNames = {
   all: '所有回忆',
@@ -73,8 +74,14 @@ function render() {
   renderOverview();
   renderFeed();
 }
-async function refresh() {
+async function refresh(background = false) {
   const catalog = await loadCatalog();
+  if (
+    background &&
+    (document.querySelector('dialog[open]') ||
+      JSON.stringify(catalog.items) === JSON.stringify(state.items))
+  )
+    return catalog;
   state.items = catalog.items;
   state.mode = catalog.mode;
   render();
@@ -275,24 +282,10 @@ document.addEventListener('keydown', (event) => {
     $('#search').focus();
   }
 });
-async function watchInitialScan() {
-  if (state.mode !== 'library') return;
-  try {
-    const status = await scanStatus();
-    if (status.running || document.querySelector('dialog[open]')) {
-      setTimeout(watchInitialScan, 2000);
-    } else if (!status.error) {
-      const catalog = await loadCatalog();
-      state.items = catalog.items;
-      renderOverview();
-      if (!document.querySelector('dialog[open]')) renderFeed();
-    }
-  } catch {
-    /* Keep the loaded catalog available when the library is temporarily offline. */
-  }
-}
 refresh()
-  .then(() => watchInitialScan())
+  .then(() => {
+    if (state.mode === 'library') startLibrarySync(() => refresh(true));
+  })
   .catch((error) => {
     $('#feed').setAttribute('aria-busy', 'false');
     $('#feed').innerHTML =

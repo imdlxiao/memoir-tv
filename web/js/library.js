@@ -5,7 +5,14 @@ import { backup, importBackup, startScan, scanStatus, getMode } from './api.js';
 export function openLibrary(items, refresh, enterTV) {
   const dialog = $('#library-dialog'),
     local = getMode() === 'library';
-  dialog.innerHTML = `<header class="dialog-header"><div><h2>照顾好我们的回忆</h2><p>${local ? '原片留在原处，故事有自己的位置。' : '静态回忆库 · 修改保存在当前浏览器'}</p></div><button class="icon-button" data-close aria-label="关闭回忆库管理">${icon('close')}</button></header><div class="library-content"><div class="library-summary"><span>${icon('folder')}</span><div><strong>${items.length} 份回忆 · ${fileSize(items.reduce((sum, item) => sum + (item.size || 0), 0))}</strong><p>视频 ${items.filter((i) => i.kind === 'video').length} 段 · 照片 ${items.filter((i) => i.kind === 'photo').length} 张</p></div></div><section class="library-section"><h3>新回忆，放进来就好</h3><p>${local ? '当前站点读取已生成的静态索引。添加素材后，需要在素材电脑重新扫描并导出站点。' : '把视频或照片放进配置的素材文件夹，点击刷新即可。支持子文件夹，不复制、不移动、不改动原片。'}</p>${local ? `<button class="secondary-button" id="scan-library">${icon('refresh')}刷新回忆库</button>` : ''}<p class="library-status" id="scan-message" role="status"></p></section><section class="library-section"><h3>把写下的故事，也备份一份</h3><p>备份包含你补充的日期、地点、标签、文字与珍藏状态，不含视频和照片。导入会合并记录，同一回忆以导入内容为准。</p><div class="library-actions"><button class="secondary-button" id="export-backup">${icon('download')}导出编辑记录</button><button class="secondary-button" id="import-backup">${icon('folder')}导入编辑记录</button><input type="file" id="backup-file" accept="application/json,.json" hidden></div><p class="library-status" id="import-message" role="status"></p><button class="primary-button" id="confirm-import" hidden>确认合并这份备份</button></section><section class="library-section"><h3>一起在大屏上重温</h3><p>放大回忆卡片，用遥控器方向键选择，确认键打开。照片每 8 秒翻页，视频结束后继续下一段。</p><button class="secondary-button" id="library-tv">${icon('tv')}进入客厅放映室</button></section></div>`;
+  function updateSummary(catalog) {
+    const current = catalog.items;
+    $('.library-summary strong', dialog).textContent =
+      `${current.length} 份回忆 · ${fileSize(current.reduce((sum, item) => sum + (item.size || 0), 0))}`;
+    $('.library-summary p', dialog).textContent =
+      `视频 ${current.filter((item) => item.kind === 'video').length} 段 · 照片 ${current.filter((item) => item.kind === 'photo').length} 张`;
+  }
+  dialog.innerHTML = `<header class="dialog-header"><div><h2>照顾好我们的回忆</h2><p>${local ? '原片留在原处，故事有自己的位置。' : '静态回忆库 · 修改保存在当前浏览器'}</p></div><button class="icon-button" data-close aria-label="关闭回忆库管理">${icon('close')}</button></header><div class="library-content"><div class="library-summary"><span>${icon('folder')}</span><div><strong>${items.length} 份回忆 · ${fileSize(items.reduce((sum, item) => sum + (item.size || 0), 0))}</strong><p>视频 ${items.filter((i) => i.kind === 'video').length} 段 · 照片 ${items.filter((i) => i.kind === 'photo').length} 张</p></div></div><section class="library-section"><h3>新回忆，放进来就好</h3><p>${local ? '目录中的新增或移出会自动同步，刷新页面也会立即核对。支持子文件夹，编辑记录始终保留；也可手动刷新封面。' : '当前站点读取已发布的静态索引。素材变化后，需要在素材电脑重新扫描并导出站点。'}</p>${local ? `<button class="secondary-button" id="scan-library">${icon('refresh')}刷新回忆库</button>` : ''}<p class="library-status" id="scan-message" role="status"></p></section><section class="library-section"><h3>把写下的故事，也备份一份</h3><p>备份包含你补充的日期、地点、标签、文字与珍藏状态，不含视频和照片。导入会合并记录，同一回忆以导入内容为准。</p><div class="library-actions"><button class="secondary-button" id="export-backup">${icon('download')}导出编辑记录</button><button class="secondary-button" id="import-backup">${icon('folder')}导入编辑记录</button><input type="file" id="backup-file" accept="application/json,.json" hidden></div><p class="library-status" id="import-message" role="status"></p><button class="primary-button" id="confirm-import" hidden>确认合并这份备份</button></section><section class="library-section"><h3>一起在大屏上重温</h3><p>放大回忆卡片，用遥控器方向键选择，确认键打开。照片每 8 秒翻页，视频结束后继续下一段。</p><button class="secondary-button" id="library-tv">${icon('tv')}进入客厅放映室</button></section></div>`;
   $('[data-close]', dialog).onclick = () => dialog.close();
   $('#library-tv', dialog).onclick = () => {
     dialog.close();
@@ -46,7 +53,7 @@ export function openLibrary(items, refresh, enterTV) {
     button.disabled = true;
     try {
       await importBackup(pending);
-      await refresh();
+      updateSummary(await refresh());
       button.hidden = true;
       $('#import-message', dialog).textContent = '已合并备份，回忆流已更新。';
       toast('编辑记录已恢复');
@@ -73,8 +80,8 @@ export function openLibrary(items, refresh, enterTV) {
             }
             button.disabled = false;
             if (status.error) throw new Error(status.error);
-            await refresh();
-            message.textContent = '刷新完成，新回忆已经收好。';
+            updateSummary(await refresh());
+            message.textContent = '刷新完成，回忆列表已与素材目录同步。';
             toast('回忆库已刷新');
           } catch (error) {
             message.textContent = error.message;
