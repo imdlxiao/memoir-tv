@@ -16,6 +16,7 @@ def main():
     parser.add_argument('--config', type=Path, default=ROOT / 'config.local.json')
     parser.add_argument('--host')
     parser.add_argument('--port', type=int)
+    parser.add_argument('--open', action='store_true', help='服务就绪后打开本机浏览器')
     parser.add_argument('--no-previews', action='store_true')
     parser.add_argument('--media-base', help='静态站点媒体 URL 前缀，例如 /family-media/')
     parser.add_argument('--out', type=Path, default=ROOT / 'dist')
@@ -45,7 +46,7 @@ def main():
             repository.replace_index(scan(media, repository.directory, ffmpeg, previews=False))
         app = Application(media, repository, ROOT / 'web', ffmpeg)
         app.start_scan()
-        serve(app, args.host or config.get('host', '127.0.0.1'), args.port or config.get('port', 8765))
+        serve(app, args.host or config.get('host', '127.0.0.1'), args.port or config.get('port', 8765), args.open)
 
 
 if __name__ == '__main__':

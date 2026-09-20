@@ -173,9 +173,13 @@ def handler_for(app):
     return Handler
 
 
-def serve(app, host, port):
+def serve(app, host, port, open_browser=False):
     server = ThreadingHTTPServer((host, port), handler_for(app))
     print(f'Memoir TV: http://{host}:{port}', flush=True)
+    if open_browser:
+        import webbrowser
+        browser_host = '127.0.0.1' if host == '0.0.0.0' else host
+        webbrowser.open(f'http://{browser_host}:{port}')
     try:
         server.serve_forever()
     except KeyboardInterrupt:
