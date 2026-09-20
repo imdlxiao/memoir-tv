@@ -13,7 +13,10 @@ export function openLibrary(items, refresh, enterTV) {
   };
   $('#export-backup', dialog).onclick = async () => {
     try {
-      downloadJSON(await backup(), `拾光编辑记录-${new Date().toISOString().slice(0, 10)}.json`);
+      downloadJSON(
+        await backup(),
+        `memoir-tv编辑记录-${new Date().toISOString().slice(0, 10)}.json`,
+      );
       toast('回忆记录已导出，请妥善保存');
     } catch (error) {
       toast(error.message);
@@ -28,7 +31,7 @@ export function openLibrary(items, refresh, enterTV) {
       if (file.size > 4 * 1024 * 1024) throw new Error('备份不能超过 4 MB');
       pending = JSON.parse(await file.text());
       if (pending.version !== 1 || !pending.memories || typeof pending.memories !== 'object')
-        throw new Error('不是有效的拾光备份');
+        throw new Error('不是有效的 memoir-tv 备份');
       $('#import-message', dialog).textContent =
         `将合并 ${Object.keys(pending.memories).length} 条编辑记录，请确认。`;
       $('#confirm-import', dialog).hidden = false;

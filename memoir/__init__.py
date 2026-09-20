@@ -1,1 +1,1 @@
-"""Memoir TV application package. Author: donglixiao."""
+"""memoir-tv application package. Author: donglixiao."""

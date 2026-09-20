@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 
 def main():
-    parser = argparse.ArgumentParser(description='拾光 · 家庭回忆录')
+    parser = argparse.ArgumentParser(description='memoir-tv · 家庭回忆录')
     parser.add_argument('command', nargs='?', choices=['serve', 'scan', 'export'], default='serve')
     parser.add_argument('--config', type=Path, default=ROOT / 'config.local.json')
     parser.add_argument('--host')

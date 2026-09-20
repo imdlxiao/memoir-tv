@@ -1,5 +1,6 @@
 # 项目协作约定
 
+- 产品名统一为 `memoir-tv`，界面、文档、页面标题和导出文件不得另取品牌名。
 - 作者：donglixiao。新建 Python、JavaScript、CSS、HTML、SVG、Shell 代码文件必须在头部保留作者说明；JSON 不添加非法注释。
 - `master` 是主分支，`develop` 是开发分支。功能在 `develop` 按职责提交，验证后合入 `master`。
 - 提交信息使用 `feat：中文描述` 或 `refactor：中文描述`。

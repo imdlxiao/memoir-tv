@@ -73,7 +73,7 @@ function validateBackup(value) {
     typeof value.memories !== 'object' ||
     Array.isArray(value.memories)
   )
-    throw new Error('不是有效的拾光备份文件');
+    throw new Error('不是有效的 memoir-tv 备份文件');
   const allowed = new Set([
     'title',
     'description',
