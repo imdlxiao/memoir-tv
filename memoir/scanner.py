@@ -5,6 +5,7 @@ import subprocess
 from pathlib import Path
 from .domain import PHOTO_EXTENSIONS, VIDEO_EXTENSIONS, inferred_date
 from .metadata import read_metadata
+from .identity import path_identities
 
 
 def scan(root, directory, ffmpeg='ffmpeg', previews=True, exiftool='exiftool'):
@@ -14,6 +15,8 @@ def scan(root, directory, ffmpeg='ffmpeg', previews=True, exiftool='exiftool'):
     thumbnails = directory / 'thumbnails'
     thumbnails.mkdir(parents=True, exist_ok=True)
     items, warnings = [], []
+    identities = path_identities(directory)
+    reserved_ids, seen_ids = set(identities.values()), set()
     for path in sorted(root.rglob('*')):
         extension = path.suffix.lower()
         if extension not in PHOTO_EXTENSIONS | VIDEO_EXTENSIONS or not path.is_file():
@@ -21,7 +24,12 @@ def scan(root, directory, ffmpeg='ffmpeg', previews=True, exiftool='exiftool'):
         if not path.resolve().is_relative_to(root):
             continue
         relative = path.relative_to(root).as_posix()
-        identity = hashlib.sha256(relative.encode('utf-8')).hexdigest()[:20]
+        identity = identities.get(relative) or hashlib.sha256(relative.encode('utf-8')).hexdigest()[:20]
+        salt = 0
+        while identity in seen_ids or (relative not in identities and identity in reserved_ids):
+            salt += 1
+            identity = hashlib.sha256(f'{relative}:new:{salt}'.encode('utf-8')).hexdigest()[:20]
+        seen_ids.add(identity)
         try:
             stat = path.stat()
         except FileNotFoundError:

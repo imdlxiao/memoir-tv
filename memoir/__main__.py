@@ -23,7 +23,10 @@ def main():
     args = parser.parse_args()
     config_path = args.config if args.config.exists() else ROOT / 'config.example.json'
     config = json.loads(config_path.read_text(encoding='utf-8-sig'))
-    repository = Repository(ROOT / 'data')
+    data_root = Path(config.get('data_root', ROOT / 'data'))
+    if not data_root.is_absolute():
+        data_root = ROOT / data_root
+    repository = Repository(data_root.resolve())
     media = Path(config['media_root']).resolve()
     ffmpeg = config.get('ffmpeg', 'ffmpeg')
     exiftool = config.get('exiftool', 'exiftool')

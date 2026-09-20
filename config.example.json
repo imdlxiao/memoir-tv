@@ -1,5 +1,6 @@
 {
-  "media_root": "G:/dcim备份",
+  "media_root": "F:/家庭回忆库/原片",
+  "data_root": "data",
   "host": "127.0.0.1",
   "port": 8765,
   "ffmpeg": "ffmpeg",
