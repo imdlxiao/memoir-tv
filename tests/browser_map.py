@@ -34,6 +34,7 @@ def main():
             for item in repository.catalog()['items']:
                 thumb = repository.directory / 'thumbnails' / f"{item['id']}-{item['size']}-{item['modified']}.jpg"
                 thumb.write_bytes(pixel)
+            repository.replace_index(scan(media, repository.directory, previews=False))
             ids = {item['filename']: item['id'] for item in repository.catalog()['items']}
             for name in ['one.png', 'two.png']:
                 repository.save(ids[name], {'title': name, 'location': '测试海湾', 'coordinates': {'latitude': 22.3, 'longitude': 114.17}})

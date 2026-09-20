@@ -15,6 +15,23 @@ from memoir.storage import Repository
 
 
 class InventoryTests(unittest.TestCase):
+    def test_new_arrival_reuses_existing_media_metadata(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            media = root / 'media'; media.mkdir()
+            for number in range(10):
+                (media / f'{number}.mp4').write_bytes(b'fixture')
+            repository = Repository(root / 'data')
+            repository.replace_index(scan(media, repository.directory, previews=False))
+            app = Application(media, repository, root / 'web', 'missing-ffmpeg')
+            app.catalog()
+            (media / 'new.mp4').write_bytes(b'new fixture')
+            from memoir.metadata import read_metadata
+            with patch('memoir.scanner.read_metadata', wraps=read_metadata) as metadata, patch.object(app, 'start_scan'):
+                self.assertEqual(len(app.catalog()['items']), 11)
+                metadata.assert_called_once()
+                self.assertEqual(metadata.call_args.args[0].name, 'new.mp4')
+
     def test_unchanged_directories_avoid_listing_and_detect_move(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

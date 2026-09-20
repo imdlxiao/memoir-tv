@@ -30,7 +30,8 @@ class Application:
                 return self.repository.catalog() if snapshot else None, False
             previous = read_json(self.repository.index_path, {'items': []})
             try:
-                current = scan(self.root, self.repository.directory, self.ffmpeg, previews=False, exiftool=self.exiftool)
+                current = scan(self.root, self.repository.directory, self.ffmpeg, previews=False, exiftool=self.exiftool,
+                               files=self.inventory.signature, previous=None if force else previous['items'])
             except Exception:
                 self.inventory.signature = None
                 raise

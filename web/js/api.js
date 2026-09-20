@@ -38,8 +38,12 @@ async function requestCatalog(path, background) {
     const value = await response.json().catch(() => ({}));
     throw new Error(value.error || `读取回忆失败 (${response.status})`);
   }
+  const nextTag = response.headers.get('ETag') || '';
+  // Browsers may expose a revalidated cached response as 200 instead of 304.
+  if (catalogCache && nextTag && nextTag === catalogETag)
+    return { ...catalogCache, unchanged: true };
   const value = await response.json();
-  catalogETag = response.headers.get('ETag') || '';
+  catalogETag = nextTag;
   // Keep the raw snapshot separate from browser-only annotations in static mode.
   catalogCache = value;
   return { ...value, unchanged: false };

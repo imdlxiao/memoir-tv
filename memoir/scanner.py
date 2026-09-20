@@ -3,12 +3,13 @@ import datetime as dt
 import hashlib
 import subprocess
 from pathlib import Path
+from types import SimpleNamespace
 from .domain import PHOTO_EXTENSIONS, VIDEO_EXTENSIONS, inferred_date
 from .metadata import read_metadata
 from .identity import path_identities
 
 
-def scan(root, directory, ffmpeg='ffmpeg', previews=True, exiftool='exiftool'):
+def scan(root, directory, ffmpeg='ffmpeg', previews=True, exiftool='exiftool', files=None, previous=None):
     root, directory = Path(root).resolve(), Path(directory)
     if not root.is_dir():
         raise ValueError('素材目录不存在，请检查 config.local.json 中的 media_root')
@@ -17,11 +18,11 @@ def scan(root, directory, ffmpeg='ffmpeg', previews=True, exiftool='exiftool'):
     items, warnings = [], []
     identities = path_identities(directory)
     reserved_ids, seen_ids = set(identities.values()), set()
-    for path in sorted(root.rglob('*')):
+    prior = {item['path']: item for item in previous or []}
+    candidates = ((Path(path), SimpleNamespace(st_size=size, st_mtime_ns=modified)) for path, size, modified, _ in files) if files is not None else ((path, None) for path in sorted(root.rglob('*')))
+    for path, known_stat in candidates:
         extension = path.suffix.lower()
-        if extension not in PHOTO_EXTENSIONS | VIDEO_EXTENSIONS or not path.is_file():
-            continue
-        if not path.resolve().is_relative_to(root):
+        if extension not in PHOTO_EXTENSIONS | VIDEO_EXTENSIONS:
             continue
         relative = path.relative_to(root).as_posix()
         identity = identities.get(relative) or hashlib.sha256(relative.encode('utf-8')).hexdigest()[:20]
@@ -30,6 +31,13 @@ def scan(root, directory, ffmpeg='ffmpeg', previews=True, exiftool='exiftool'):
             salt += 1
             identity = hashlib.sha256(f'{relative}:new:{salt}'.encode('utf-8')).hexdigest()[:20]
         seen_ids.add(identity)
+        old = prior.get(relative)
+        if not previews and known_stat is not None and old and (
+            old['id'], old.get('size'), old.get('modified')) == (identity, known_stat.st_size, known_stat.st_mtime_ns):
+            items.append(dict(old))
+            continue
+        if path.is_symlink() or not path.is_file() or not path.resolve().is_relative_to(root):
+            continue
         try:
             stat = path.stat()
         except FileNotFoundError:
