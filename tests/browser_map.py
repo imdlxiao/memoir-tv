@@ -31,6 +31,9 @@ def main():
         # Provide deterministic embedded metadata independently of installed ExifTool.
         with patch('memoir.scanner.read_metadata', return_value=original):
             repository.replace_index(scan(media, repository.directory, previews=False))
+            for item in repository.catalog()['items']:
+                thumb = repository.directory / 'thumbnails' / f"{item['id']}-{item['size']}-{item['modified']}.jpg"
+                thumb.write_bytes(pixel)
             ids = {item['filename']: item['id'] for item in repository.catalog()['items']}
             for name in ['one.png', 'two.png']:
                 repository.save(ids[name], {'title': name, 'location': '测试海湾', 'coordinates': {'latitude': 22.3, 'longitude': 114.17}})
@@ -58,6 +61,7 @@ def main():
                     page.locator('#map-shortcut').click()
                     expect(page.locator('.photo-pin')).to_have_count(1)
                     expect(page.locator('.photo-pin b')).to_have_text('2')
+                    assert page.locator('.photo-pin').evaluate('(p)=>p.querySelector("img").getBoundingClientRect().width <= p.getBoundingClientRect().width')
                     assert not external, external
                     page.locator('.photo-pin').click()
                     expect(page.locator('.atlas-memory')).to_have_count(2)
@@ -108,6 +112,8 @@ def main():
                         assert page.locator('#map-dialog').evaluate('(d)=>d.scrollWidth <= innerWidth'), width
                         expect(page.locator('[data-map-close]')).to_be_in_viewport()
                         expect(page.locator('.leaflet-control-attribution')).to_be_in_viewport()
+                        for pin in page.locator('.photo-pin').all():
+                            assert pin.evaluate('(p)=>p.querySelector("img").getBoundingClientRect().width <= p.getBoundingClientRect().width')
                     page.set_viewport_size({'width': 390, 'height': 844})
                     page.wait_for_timeout(250)
                     page.screenshot(path=str(ROOT / '.local' / 'map-mobile.png'))

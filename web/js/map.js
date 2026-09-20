@@ -93,12 +93,25 @@ export async function openMap(items, { focusId, onOpen, onEdit, onPick, initial 
   });
   const pins = L.layerGroup().addTo(map);
   const boundsOf = (list) => L.latLngBounds(list.map(latLng));
+  const framing = () => ({
+    paddingTopLeft: [
+      60,
+      Math.min(
+        map.getSize().y * 0.4,
+        $('.atlas-basemap', dialog).offsetTop + $('.atlas-basemap', dialog).offsetHeight + 100,
+      ),
+    ],
+    paddingBottomRight: [
+      100,
+      Math.min(map.getSize().y * 0.35, $('.atlas-sheet', dialog).offsetHeight + 65),
+    ],
+    animate: false,
+  });
   const fit = () => {
     if (picking && picked) map.setView([picked.latitude, picked.longitude], 14);
     else if (located.length)
       map.fitBounds(boundsOf(located), {
-        paddingTopLeft: [60, 60],
-        paddingBottomRight: [80, 240],
+        ...framing(),
         maxZoom: 15,
       });
     else map.setView([27, 108], 4);
@@ -127,8 +140,7 @@ export async function openMap(items, { focusId, onOpen, onEdit, onPick, initial 
       : `<div class="atlas-empty">${icon('pin')}<strong>还没有留下坐标的回忆</strong><p>原片带 GPS 时会自动出现在这里。也可以在“编辑回忆”中选点，补上当时的位置。</p></div>`;
     $('[data-map-spread]', tray)?.addEventListener('click', () =>
       map.fitBounds(boundsOf(list), {
-        paddingTopLeft: [60, 60],
-        paddingBottomRight: [80, 240],
+        ...framing(),
         maxZoom: 19,
       }),
     );
@@ -252,6 +264,12 @@ export async function openMap(items, { focusId, onOpen, onEdit, onPick, initial 
     };
   }
   map.on('moveend', renderPins);
+  map.on('resize', () => {
+    if (picking) return;
+    if (focus && !nearby)
+      map.fitBounds(boundsOf([focus]), { ...framing(), maxZoom: map.getZoom() });
+    else fit();
+  });
   dialog.addEventListener(
     'close',
     () => {

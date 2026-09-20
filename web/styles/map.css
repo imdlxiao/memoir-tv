@@ -246,7 +246,7 @@
   border-right: 9px solid transparent;
   border-top: 10px solid white;
 }
-.photo-pin img,
+.leaflet-container .photo-pin img,
 .photo-pin .map-cover-fallback {
   width: 100%;
   height: 100%;
