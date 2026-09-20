@@ -72,7 +72,7 @@ def handler_for(app):
 
         def do_GET(self):
             route = unquote(urlsplit(self.path).path)
-            if route == '/api/catalog':
+            if route in {'/api/catalog', '/data/catalog.json'}:
                 return self.json_response({**app.repository.catalog(), 'mode': 'library'})
             if route == '/api/status':
                 return self.json_response(app.scan_status)

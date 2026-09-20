@@ -1,0 +1,68 @@
+<!doctype html>
+<!-- Author: donglixiao · 拾光家庭回忆录 -->
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f6f7f2">
+  <meta name="description" content="拾光，把一家人的日子好好收藏。私有家庭照片与视频回忆录。">
+  <title>拾光 · 家庭回忆录</title>
+  <link rel="icon" href="./assets/mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles/tokens.css">
+  <link rel="stylesheet" href="./styles/layout.css">
+  <link rel="stylesheet" href="./styles/components.css">
+  <script type="module" src="./js/app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#feed">跳到回忆流</a>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="主导航">
+      <a class="brand" href="./"><img src="./assets/mark.svg" alt="" width="42" height="42"><span>拾光<small>MEMOIR / FAMILY</small></span></a>
+      <p class="nav-caption">一家人的时光簿</p>
+      <nav id="navigation">
+        <button class="nav-item active" data-view="all"><span data-icon="home"></span><span>所有回忆</span><small id="nav-count">—</small></button>
+        <button class="nav-item" data-view="video"><span data-icon="video"></span><span>家庭影像</span></button>
+        <button class="nav-item" data-view="photo"><span data-icon="image"></span><span>相片集</span></button>
+        <button class="nav-item" data-view="favorites"><span data-icon="heart"></span><span>我的珍藏</span></button>
+        <button class="nav-item" data-view="undated"><span data-icon="calendar"></span><span>待补日期</span><small id="undated-count">—</small></button>
+      </nav>
+      <div class="sidebar-divider"></div>
+      <button class="nav-item" id="tv-button"><span data-icon="tv"></span><span>客厅放映室</span><span class="tiny-badge">TV</span></button>
+      <button class="nav-item" id="library-button"><span data-icon="folder"></span><span>管理回忆库</span></button>
+      <div class="sidebar-note"><span class="note-spark">✳</span><p>平常的日子，<br>也值得被记得。</p><span class="note-line"></span><small>MADE OF LITTLE MOMENTS</small></div>
+      <div class="family-account"><div class="family-avatar">家</div><div><strong>我们的家</strong><small><span class="status-dot"></span> 私有回忆空间</small></div><span data-icon="leaf"></span></div>
+    </aside>
+    <main class="main-column">
+      <header class="topbar"><div class="mobile-brand"><img src="./assets/mark.svg" alt="" width="28" height="28">拾光</div><div class="breadcrumb">我们的家 <span>/</span> <strong id="page-name">所有回忆</strong></div><div class="topbar-actions"><span class="private-label"><span data-icon="lock"></span> 只属于我们</span><button class="icon-button" id="theme-button" aria-label="切换深色模式" title="切换深色模式"><span data-icon="moon"></span></button></div></header>
+      <section class="welcome">
+        <div class="welcome-copy"><div class="eyebrow"><span></span> THE DAYS WE KEEP</div><h1>日子很慢，<br>回忆很长<span>。</span></h1><p>把一家人的平凡瞬间，收藏成永远。</p><div class="welcome-foot"><span class="mini-avatars"><i>家</i><i>爱</i><i>忆</i></span><span>在一起，就是好时光</span><span class="small-star">✧</span></div></div>
+        <img class="hero-art" src="./assets/memories.svg" alt="手绘风格的山间风景相片与温暖的太阳" width="292" height="246">
+      </section>
+      <section class="feed-toolbar" aria-label="回忆筛选">
+        <div class="feed-heading"><div><h2 id="feed-title">每一刻，都算数 <span id="result-count">0</span></h2><p id="feed-subtitle">沿着时间，重逢那些小美好</p></div><button class="quiet-button" id="sort-button"><span data-icon="sort"></span><span>从新到旧</span></button></div>
+        <div class="filter-row"><label class="search-field"><span data-icon="search"></span><input id="search" type="search" placeholder="找找某个瞬间、地点或标签…" autocomplete="off" aria-label="搜索回忆"><kbd>/</kbd></label><button class="filter-button" id="filter-toggle" aria-expanded="false"><span data-icon="sliders"></span><span>筛选</span><i id="filter-dot" hidden></i></button></div>
+        <div class="filter-panel" id="filter-panel" hidden><label>拍摄年份<select id="year-filter"><option value="">所有年份</option></select></label><label>回忆发生地<select id="location-filter"><option value="">所有地点</option></select></label><label>回忆标签<select id="tag-filter"><option value="">所有标签</option></select></label><button class="quiet-button" id="reset-filters">清除筛选</button></div>
+        <div class="feed-tabs" role="tablist" aria-label="回忆类型"><button role="tab" aria-selected="true" data-tab="all">全部时光</button><button role="tab" aria-selected="false" data-tab="video">视频</button><button role="tab" aria-selected="false" data-tab="photo">照片</button><div class="view-toggle"><button class="icon-button active" id="list-view" aria-label="列表视图" aria-pressed="true"><span data-icon="list"></span></button><button class="icon-button" id="grid-view" aria-label="网格视图" aria-pressed="false"><span data-icon="grid"></span></button></div></div>
+      </section>
+      <div id="active-filters" class="active-filters"></div>
+      <section id="feed" class="feed" aria-label="家庭回忆流" aria-busy="true"><div class="loading-state"><span class="loading-flower">✳</span><p>正在翻开我们的时光簿…</p></div></section>
+      <div id="feed-end" class="feed-end" hidden><span>✳</span><p>日子还在继续，回忆也是。</p><small>每一个普通的今天，都是以后的想念</small></div>
+      <button class="load-more" id="load-more" hidden>再看看以前的时光 <span data-icon="down"></span></button>
+    </main>
+    <aside class="right-column" aria-label="回忆概览">
+      <section class="date-card"><span class="eyebrow">A LITTLE EVERY DAY</span><div class="today-date" id="today-date"></div><p>今天也要好好生活呀。</p><span class="date-flower">✳</span></section>
+      <section class="overview-card"><div class="section-label"><h3>我们的时光</h3><span data-icon="sparkles"></span></div><div class="stats"><div><strong id="video-count">0</strong><span>段影像</span></div><div><strong id="photo-count">0</strong><span>张照片</span></div><div><strong id="favorite-count">0</strong><span>份珍藏</span></div></div><div class="year-list" id="year-list"></div></section>
+      <section class="places-card"><div class="section-label"><h3>回忆里的地方</h3><span data-icon="map"></span></div><div id="places-list"></div></section>
+      <section class="tags-card"><div class="section-label"><h3>那些小主题</h3><span data-icon="tag"></span></div><div id="tags-list" class="tag-cloud"></div></section>
+      <div class="right-quote"><span>“</span><p>幸福，就是寻常日子里<br>的那些寻常事。</p><small>留住时光，留住我们。</small></div>
+      <footer class="side-footer">拾光 MEMOIR <span>·</span> 为家而造<br><small>原片静静存放，回忆慢慢生长</small></footer>
+    </aside>
+  </div>
+  <nav class="mobile-nav" aria-label="移动端导航"><button class="active" data-mobile-view="all"><span data-icon="home"></span>时光</button><button data-mobile-view="video"><span data-icon="video"></span>影像</button><button data-mobile-view="photo"><span data-icon="image"></span>照片</button><button data-mobile-view="favorites"><span data-icon="heart"></span>珍藏</button><button id="mobile-library"><span data-icon="folder"></span>管理</button></nav>
+  <dialog id="editor-dialog" class="editor-dialog"></dialog>
+  <dialog id="viewer-dialog" class="viewer-dialog"></dialog>
+  <dialog id="library-dialog" class="library-dialog"></dialog>
+  <div id="toast" role="status" class="toast" hidden></div>
+  <noscript><p class="noscript">请开启 JavaScript 来浏览家庭回忆录。</p></noscript>
+</body>
+</html>
