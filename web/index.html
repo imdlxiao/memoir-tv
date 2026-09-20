@@ -15,6 +15,8 @@
     <link rel="stylesheet" href="./styles/layout.css" />
     <link rel="stylesheet" href="./styles/components.css" />
     <link rel="stylesheet" href="./styles/features.css" />
+    <link rel="stylesheet" href="./vendor/leaflet/leaflet.css" />
+    <link rel="stylesheet" href="./styles/map.css" />
     <script type="module" src="./js/app.js"></script>
   </head>
   <body>
@@ -46,6 +48,9 @@
           </button>
         </nav>
         <div class="sidebar-divider"></div>
+        <button class="nav-item" id="map-button">
+          <span data-icon="map"></span><span>回忆地图</span>
+        </button>
         <button class="nav-item" id="tv-button">
           <span data-icon="tv"></span><span>客厅放映室</span><span class="tiny-badge">TV</span>
         </button>
@@ -108,6 +113,7 @@
           <button id="resume-button" hidden><span data-icon="play"></span>接着看</button>
           <button id="anniversary-button"><span data-icon="calendar"></span>往年今日</button>
           <button id="random-button"><span data-icon="sparkles"></span>随便看看</button>
+          <button id="map-shortcut"><span data-icon="map"></span>回忆地图</button>
         </section>
         <section class="feed-toolbar" aria-label="回忆筛选">
           <div class="feed-heading">
@@ -257,6 +263,7 @@
     <dialog id="library-dialog" class="library-dialog" aria-label="管理回忆库"></dialog>
     <dialog id="batch-dialog" class="editor-dialog" aria-label="批量整理回忆"></dialog>
     <dialog id="discovery-dialog" class="discovery-dialog" aria-label="往年今日"></dialog>
+    <dialog id="map-dialog" class="map-dialog" aria-label="回忆地图"></dialog>
     <div id="toast" role="status" class="toast" hidden></div>
     <noscript><p class="noscript">请开启 JavaScript 来浏览家庭回忆录。</p></noscript>
   </body>

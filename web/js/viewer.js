@@ -13,6 +13,8 @@ import {
 } from './utils.js';
 import { attachProgress, clockLabel } from './progress.js';
 import { preferences, savePreference } from './preferences.js';
+import { captureHTML } from './capture.js';
+import { validCoordinates } from './geo.js';
 
 let playlist = [],
   index = 0,
@@ -68,6 +70,22 @@ function render() {
     <footer class="viewer-footer"><button data-previous ${index === 0 ? 'disabled' : ''}>${icon('left')}上一段</button><span>${index + 1} / ${playlist.length}<span class="viewer-hint"> · ← → 切换 · Esc 返回</span></span><button data-next ${index === playlist.length - 1 ? 'disabled' : ''}>下一段${icon('right')}</button></footer>
     <details class="viewer-details"><summary>原片信息与下载</summary><dl><dt>文件名</dt><dd>${e(item.filename)}</dd><dt>原片大小</dt><dd>${fileSize(item.size || 0)}</dd><dt>拍摄时间</dt><dd>${e(dateLabel(item))}</dd><dt>地点</dt><dd>${e(item.location || '还没补充')}</dd>${item.tags?.length ? `<dt>标签</dt><dd>${item.tags.map((tag) => '#' + e(tag)).join(' · ')}</dd>` : ''}${item.description ? `<dt>故事</dt><dd>${e(item.description)}</dd>` : ''}</dl><a href="${e(mediaURL(item))}" download="${e(item.filename)}">${icon('download')}下载原片</a></details>`;
   $('[data-close]', dialog).onclick = () => dialog.close();
+  const details = $('.viewer-details', dialog);
+  details.insertAdjacentHTML('afterbegin', captureHTML(item));
+  // Keep the summary first so the native disclosure remains keyboard accessible.
+  details.prepend($('summary', details));
+  $('[data-capture-map]', dialog).onclick = () => {
+    dialog.close();
+    document.dispatchEvent(
+      new CustomEvent(validCoordinates(item.coordinates) ? 'memoir:map' : 'memoir:edit', {
+        detail: item.id,
+      }),
+    );
+  };
+  $('[data-capture-edit]', dialog).onclick = () => {
+    dialog.close();
+    document.dispatchEvent(new CustomEvent('memoir:edit', { detail: item.id }));
+  };
   $('[data-previous]', dialog).onclick = () => navigate(-1);
   $('[data-next]', dialog).onclick = () => navigate(1);
   $('[data-fullscreen]', dialog).onclick = async () => {

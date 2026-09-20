@@ -1,4 +1,5 @@
 /* Author: donglixiao · Library API and static-site local edit adapter. */
+import { validCoordinates } from './geo.js';
 const STORAGE_KEY = `memoir-edits-v1:${location.pathname}`;
 let mode = 'library';
 let currentCatalog = [];
@@ -55,7 +56,16 @@ export async function saveMemory(id, changes) {
 }
 export async function backup() {
   if (mode === 'library') return request('/api/backup');
-  const keys = ['title', 'description', 'date', 'precision', 'location', 'tags', 'favorite'];
+  const keys = [
+    'title',
+    'description',
+    'date',
+    'precision',
+    'location',
+    'tags',
+    'favorite',
+    'coordinates',
+  ];
   const memories = Object.fromEntries(
     currentCatalog.map((item) => [
       item.id,
@@ -112,8 +122,16 @@ function validateBackup(value) {
     'location',
     'tags',
     'favorite',
+    'coordinates',
   ]);
   for (const [id, edit] of Object.entries(value.memories)) {
+    if (
+      edit &&
+      'coordinates' in Object(edit) &&
+      edit.coordinates !== null &&
+      !validCoordinates(edit.coordinates)
+    )
+      throw new Error('地图坐标无效，请使用 WGS84 纬度和经度');
     if (
       !/^[a-f0-9]{20}$/.test(id) ||
       !edit ||

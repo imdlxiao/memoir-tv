@@ -12,6 +12,7 @@ import { startLibrarySync } from './sync.js';
 import { initializeBatch, toggleSelection } from './batch.js';
 import { initializeDiscovery, updateDiscovery } from './discovery.js';
 import { preferences, savePreference } from './preferences.js';
+import { openMap } from './map.js';
 
 const viewNames = {
   all: '所有回忆',
@@ -153,6 +154,21 @@ initializeViewer();
 initializeTV();
 initializeBatch(renderFeed, refresh);
 initializeDiscovery();
+const editFromMap = (item) =>
+  editMemory(item, () => refresh().catch((error) => toast(error.message)));
+const atlas = (focusId) =>
+  openMap(focusId ? state.items : filteredItems(), {
+    focusId,
+    onOpen: openViewer,
+    onEdit: editFromMap,
+  });
+$('#map-button').onclick = () => atlas();
+$('#map-shortcut').onclick = () => atlas();
+document.addEventListener('memoir:map', (event) => atlas(event.detail));
+document.addEventListener('memoir:edit', (event) => {
+  const item = state.items.find((item) => item.id === event.detail);
+  if (item) editFromMap(item);
+});
 $('#viewer-dialog').addEventListener('close', render);
 const now = new Date();
 $('#today-date').innerHTML =
