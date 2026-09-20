@@ -3,7 +3,7 @@ import json
 import mimetypes
 import re
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import urlsplit, unquote
+from urllib.parse import urlsplit, unquote, parse_qs
 from .domain import validate_edit
 from .library import Application
 from .storage import read_json
@@ -49,7 +49,19 @@ def handler_for(app):
             route = unquote(urlsplit(self.path).path)
             if route in {'/api/catalog', '/data/catalog.json'}:
                 try:
-                    return self.json_response({**app.catalog(), 'mode': 'library'})
+                    body, etag = app.catalog_payload(background=parse_qs(urlsplit(self.path).query).get('background') == ['1'])
+                    unchanged = self.headers.get('If-None-Match') == etag
+                    self.send_response(304 if unchanged else 200)
+                    self.send_header('ETag', etag)
+                    self.send_header('Cache-Control', 'private, no-cache')
+                    self.send_header('Content-Type', 'application/json; charset=utf-8')
+                    self.send_header('X-Content-Type-Options', 'nosniff')
+                    if not unchanged:
+                        self.send_header('Content-Length', str(len(body)))
+                    self.end_headers()
+                    if not unchanged and self.command != 'HEAD':
+                        self.wfile.write(body)
+                    return
                 except (OSError, ValueError):
                     return self.json_response({'error': '素材目录暂不可用，请检查磁盘连接和目录配置'}, 503)
             if route == '/api/status':
@@ -58,7 +70,7 @@ def handler_for(app):
                 return self.json_response({'version': 1, 'memories': read_json(app.repository.edits_path, {})})
             if route.startswith('/media/'):
                 media_id = route.removeprefix('/media/')
-                item = next((i for i in app.repository.catalog()['items'] if i['id'] == media_id), None)
+                item = app.repository.find(media_id)
                 if not item:
                     return self.json_response({'error': '素材不存在'}, 404)
                 path = (app.root / item['path']).resolve()

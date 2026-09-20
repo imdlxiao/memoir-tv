@@ -3,6 +3,8 @@ import json
 import os
 import threading
 import uuid
+import copy
+import hashlib
 from pathlib import Path
 
 
@@ -26,16 +28,48 @@ class Repository:
         self.lock = threading.RLock()
         self.index_path = self.directory / 'catalog.json'
         self.edits_path = self.directory / 'memories.json'
+        self._stamp = None
+        self._catalog = None
+        self._by_id = {}
+        self._body = b''
+        self._etag = ''
+
+    def _refresh_cache(self):
+        stamp = []
+        for path in (self.index_path, self.edits_path):
+            try:
+                stat = path.stat()
+                stamp.append((stat.st_ino, stat.st_size, stat.st_mtime_ns))
+            except FileNotFoundError:
+                stamp.append(None)
+        if stamp == self._stamp:
+            return
+        index = read_json(self.index_path, {'items': [], 'scannedAt': None})
+        edits = read_json(self.edits_path, {})
+        self._catalog = {**index, 'items': [{**item, **edits.get(item['id'], {})} for item in index['items']]}
+        self._by_id = {item['id']: item for item in self._catalog['items']}
+        self._body = json.dumps({**self._catalog, 'mode': 'library'}, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
+        self._etag = '"' + hashlib.sha256(self._body).hexdigest() + '"'
+        self._stamp = stamp
+
+    def catalog_payload(self):
+        with self.lock:
+            self._refresh_cache()
+            return self._body, self._etag
+
+    def find(self, identity):
+        with self.lock:
+            self._refresh_cache()
+            return copy.deepcopy(self._by_id.get(identity))
 
     def catalog(self):
         with self.lock:
-            index = read_json(self.index_path, {'items': [], 'scannedAt': None})
-            edits = read_json(self.edits_path, {})
-            return {**index, 'items': [{**item, **edits.get(item['id'], {})} for item in index['items']]}
+            self._refresh_cache()
+            return copy.deepcopy(self._catalog)
 
     def save(self, media_id, changes):
         with self.lock:
-            if not any(item['id'] == media_id for item in self.catalog()['items']):
+            if self.find(media_id) is None:
                 raise KeyError(media_id)
             edits = read_json(self.edits_path, {})
             edits[media_id] = {**edits.get(media_id, {}), **changes}

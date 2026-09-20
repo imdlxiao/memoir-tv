@@ -1,8 +1,10 @@
 """Synchronize live directory membership independently of preview jobs. Author: donglixiao."""
 import threading
+import time
 from pathlib import Path
 from .scanner import scan
 from .storage import read_json
+from .inventory import DirectoryInventory
 
 
 class Application:
@@ -13,13 +15,25 @@ class Application:
         self.scan_lock = threading.Lock()
         self.catalog_lock = threading.Lock()
         self.scan_status = {'running': False, 'error': ''}
+        self.inventory = DirectoryInventory(self.root)
+        self.last_check = 0
 
-    def _synchronize(self):
+    def _synchronize(self, force=False, background=False, snapshot=True):
         # Never hold this lock while decoding video. A page refresh must not wait
         # for previews, and a finished preview job must not publish stale paths.
         with self.catalog_lock:
+            if background and time.monotonic() - self.last_check < 2:
+                return self.repository.catalog() if snapshot else None, False
+            changed = self.inventory.changed(force=force)
+            self.last_check = time.monotonic()
+            if not changed and not force and self.repository.index_path.exists():
+                return self.repository.catalog() if snapshot else None, False
             previous = read_json(self.repository.index_path, {'items': []})
-            current = scan(self.root, self.repository.directory, self.ffmpeg, previews=False, exiftool=self.exiftool)
+            try:
+                current = scan(self.root, self.repository.directory, self.ffmpeg, previews=False, exiftool=self.exiftool)
+            except Exception:
+                self.inventory.signature = None
+                raise
             previous_files = {
                 (item['id'], item.get('size'), item.get('modified'))
                 for item in previous['items']
@@ -31,10 +45,16 @@ class Application:
             )
             if previous['items'] != current['items'] or not self.repository.index_path.exists():
                 self.repository.replace_index(current)
-            return self.repository.catalog(), needs_previews
+            return self.repository.catalog() if snapshot else None, needs_previews
 
-    def catalog(self):
-        catalog, needs_previews = self._synchronize()
+    def catalog_payload(self, background=False):
+        _, needs_previews = self._synchronize(background=background, snapshot=False)
+        if needs_previews:
+            self.start_scan()
+        return self.repository.catalog_payload()
+
+    def catalog(self, background=False):
+        catalog, needs_previews = self._synchronize(background=background)
         if needs_previews:
             self.start_scan()
         return catalog
@@ -46,11 +66,11 @@ class Application:
 
         def run():
             try:
-                self._synchronize()
+                self._synchronize(force=True)
                 previews = scan(self.root, self.repository.directory, self.ffmpeg, exiftool=self.exiftool)
                 # Re-discover membership after the potentially slow preview pass.
                 # A file moved away during decoding cannot reappear in the index.
-                self._synchronize()
+                self._synchronize(force=True)
                 self.scan_status = {'running': False, 'error': '', 'warnings': previews['warnings']}
             except Exception as exc:
                 self.scan_status = {'running': False, 'error': str(exc)}

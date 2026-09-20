@@ -22,6 +22,7 @@ const viewNames = {
   undated: '待补日期',
 };
 const savedPreferences = preferences();
+let appliedCatalogRevision = null;
 state.grid = savedPreferences.grid;
 state.ascending = savedPreferences.ascending;
 function renderOverview() {
@@ -93,15 +94,17 @@ function render() {
   updateDiscovery();
 }
 async function refresh(background = false) {
-  const catalog = await loadCatalog();
+  const catalog = await loadCatalog(background);
   if (
     background &&
     (document.querySelector('dialog[open]') ||
+      (catalog.unchanged && appliedCatalogRevision === catalog.revision) ||
       JSON.stringify(catalog.items) === JSON.stringify(state.items))
   )
     return catalog;
   state.items = catalog.items;
   state.mode = catalog.mode;
+  appliedCatalogRevision = catalog.revision;
   render();
   return catalog;
 }

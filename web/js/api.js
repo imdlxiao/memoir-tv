@@ -3,6 +3,8 @@ import { validCoordinates } from './geo.js';
 const STORAGE_KEY = `memoir-edits-v1:${location.pathname}`;
 let mode = 'library';
 let currentCatalog = [];
+let catalogCache = null;
+let catalogETag = '';
 async function request(path, method = 'GET', body) {
   const response = await fetch(path, {
     method,
@@ -26,13 +28,29 @@ function localEdits() {
     throw new Error('浏览器保存记录无法读取，请检查浏览器存储');
   }
 }
-export async function loadCatalog() {
+async function requestCatalog(path, background) {
+  const response = await fetch(path + (background ? '?background=1' : ''), {
+    headers: catalogETag ? { 'If-None-Match': catalogETag } : {},
+    cache: 'no-cache',
+  });
+  if (response.status === 304 && catalogCache) return { ...catalogCache, unchanged: true };
+  if (!response.ok) {
+    const value = await response.json().catch(() => ({}));
+    throw new Error(value.error || `读取回忆失败 (${response.status})`);
+  }
+  const value = await response.json();
+  catalogETag = response.headers.get('ETag') || '';
+  // Keep the raw snapshot separate from browser-only annotations in static mode.
+  catalogCache = value;
+  return { ...value, unchanged: false };
+}
+export async function loadCatalog(background = false) {
   let catalog;
   try {
-    catalog = await request('./data/catalog.json');
+    catalog = await requestCatalog('./data/catalog.json', background);
     mode = catalog.mode === 'library' ? 'library' : 'static';
   } catch {
-    catalog = await request('/api/catalog');
+    catalog = await requestCatalog('/api/catalog', background);
     mode = 'library';
   }
   if (!Array.isArray(catalog.items)) throw new Error('回忆索引格式不正确');
@@ -41,7 +59,7 @@ export async function loadCatalog() {
     catalog.items = catalog.items.map((item) => ({ ...item, ...edits[item.id] }));
   }
   currentCatalog = catalog.items;
-  return { ...catalog, mode };
+  return { ...catalog, mode, revision: catalogETag };
 }
 export function getMode() {
   return mode;
