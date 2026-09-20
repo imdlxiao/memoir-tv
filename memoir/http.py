@@ -127,6 +127,9 @@ def handler_for(app):
                     return self.json_response({'error': '请求内容大小超限'}, 413)
                 value = json.loads(self.rfile.read(length))
                 route = urlsplit(self.path).path
+                if self.command == 'POST' and route == '/api/batch':
+                    app.catalog()
+                    return self.json_response({'count': app.repository.save_many(value)})
                 if self.command == 'PATCH' and route.startswith('/api/memories/'):
                     app.repository.save(route.rsplit('/', 1)[-1], validate_edit(value))
                     return self.json_response({'ok': True})

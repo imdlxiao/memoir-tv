@@ -47,6 +47,30 @@ class Repository:
         with self.lock:
             atomic_json(self.index_path, index)
 
+    def save_many(self, value):
+        from .domain import validate_batch, validate_edit
+        ids, changes, tag_mode = validate_batch(value)
+        with self.lock:
+            current = {item['id']: item for item in self.catalog()['items']}
+            if any(identity not in current for identity in ids):
+                raise KeyError('部分素材已移出，请刷新后重新选择')
+            previous = read_json(self.edits_path, {})
+            updated = dict(previous)
+            for identity in ids:
+                patch = dict(changes)
+                if 'tags' in changes:
+                    existing = current[identity].get('tags', [])
+                    if tag_mode == 'append':
+                        patch['tags'] = list(dict.fromkeys(existing + changes['tags']))
+                    elif tag_mode == 'remove':
+                        patch['tags'] = [tag for tag in existing if tag not in changes['tags']]
+                # Validate the merged tags before writing any record.
+                patch = validate_edit(patch)
+                updated[identity] = {**previous.get(identity, {}), **patch}
+            atomic_json(self.directory / 'memories.backup.json', previous)
+            atomic_json(self.edits_path, updated)
+        return len(ids)
+
     def import_edits(self, edits):
         from .domain import validate_edit
         if not isinstance(edits, dict) or len(edits) > 100000:

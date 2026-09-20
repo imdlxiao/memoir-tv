@@ -52,3 +52,21 @@ def validate_edit(value):
                 raise ValueError('拍摄日期不存在') from exc
         result.update(date=date, precision=precision)
     return result
+
+
+def validate_batch(value):
+    if not isinstance(value, dict) or set(value) - {'ids', 'changes', 'tagMode'}:
+        raise ValueError('批量请求格式错误')
+    ids = value.get('ids')
+    if not isinstance(ids, list) or not 1 <= len(ids) <= 200 or any(
+        not isinstance(identity, str) or not re.fullmatch(r'[a-f0-9]{20}', identity)
+        for identity in ids
+    ):
+        raise ValueError('每次请选择 1 至 200 条回忆')
+    changes = validate_edit(value.get('changes'))
+    if not changes or set(changes) - {'date', 'precision', 'location', 'tags', 'favorite'}:
+        raise ValueError('批量整理仅支持日期、地点、标签和珍藏')
+    tag_mode = value.get('tagMode', 'append')
+    if tag_mode not in {'append', 'replace', 'remove'}:
+        raise ValueError('标签操作不正确')
+    return list(dict.fromkeys(ids)), changes, tag_mode
