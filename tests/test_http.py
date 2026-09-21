@@ -8,6 +8,7 @@ from http.server import ThreadingHTTPServer
 from pathlib import Path
 from memoir.http import Application, byte_range, handler_for
 from memoir.storage import Repository
+from auth_support import owner_session
 
 
 class RangeTests(unittest.TestCase):
@@ -27,21 +28,23 @@ class RangeTests(unittest.TestCase):
             (media / 'test.mp4').write_bytes(b'0123456789')
             repository = Repository(root / 'data')
             (repository.directory / 'thumbnails').mkdir(parents=True)
-            (repository.directory / 'thumbnails' / 'versioned.jpg').write_bytes(b'thumbnail')
-            repository.replace_index({'items': [{'id': 'test', 'path': 'test.mp4'}, {'id': 'bad', 'path': '../secret.txt'}]})
-            server = ThreadingHTTPServer(('127.0.0.1', 0), handler_for(Application(media, repository, root / 'web', 'ffmpeg')))
+            (repository.directory / 'thumbnails' / 'test-versioned.jpg').write_bytes(b'thumbnail')
+            repository.replace_index({'items': [{'id': 'test', 'path': 'test.mp4', 'thumbnail': '/thumbnails/test-versioned.jpg'}, {'id': 'bad', 'path': '../secret.txt'}]})
+            app = Application(media, repository, root / 'web', 'ffmpeg')
+            cookie = owner_session(app)
+            server = ThreadingHTTPServer(('127.0.0.1', 0), handler_for(app))
             threading.Thread(target=server.serve_forever, daemon=True).start()
             connection = http.client.HTTPConnection('127.0.0.1', server.server_port)
             try:
-                connection.request('GET', '/thumbnails/versioned.jpg')
+                connection.request('GET', '/thumbnails/test-versioned.jpg', headers={'Cookie': cookie})
                 response = connection.getresponse()
-                self.assertEqual(response.getheader('Cache-Control'), 'private, max-age=31536000, immutable')
+                self.assertEqual(response.getheader('Cache-Control'), 'private, no-store')
                 response.read()
-                connection.request('GET', '/media/test', headers={'Range': 'bytes=2-5'})
+                connection.request('GET', '/media/test', headers={'Range': 'bytes=2-5', 'Cookie': cookie})
                 response = connection.getresponse()
                 self.assertEqual(response.status, 206)
                 self.assertEqual(response.read(), b'2345')
-                connection.request('GET', '/media/bad')
+                connection.request('GET', '/media/bad', headers={'Cookie': cookie})
                 response = connection.getresponse()
                 self.assertEqual(response.status, 403)
                 response.read()

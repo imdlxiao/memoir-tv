@@ -2,11 +2,14 @@
 import json
 import mimetypes
 import re
+import time
+from http.cookies import SimpleCookie, CookieError
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlsplit, unquote, parse_qs
 from .domain import validate_edit
 from .library import Application
 from .storage import read_json
+from .auth import AccessError
 
 
 def byte_range(header, size):
@@ -38,22 +41,88 @@ def handler_for(app):
             self.send_header('Content-Length', str(len(body)))
             self.send_header('Cache-Control', 'no-store')
             self.send_header('X-Content-Type-Options', 'nosniff')
+            if getattr(self, 'session_cookie', None):
+                self.send_header('Set-Cookie', self.session_cookie)
             self.end_headers()
             if self.command != 'HEAD':
                 self.wfile.write(body)
+
+        def token(self):
+            try:
+                cookies = SimpleCookie(self.headers.get('Cookie', ''))
+                return cookies['memoir_session'].value if 'memoir_session' in cookies else ''
+            except CookieError:
+                return ''
+
+        def set_session(self, session=None):
+            token, age = session or ('', 0)
+            self.session_cookie = f'memoir_session={token}; Path=/; HttpOnly; SameSite=Strict; Max-Age={age}'
+            if getattr(app, 'secure_cookies', False):
+                self.session_cookie += '; Secure'
+
+        def identity(self, admin=False):
+            user = app.auth.resolve(self.token())
+            if not user:
+                raise AccessError('登录已过期或账号已停用，请重新登录', 401)
+            if admin:
+                app.auth.require_admin(user)
+            return user
+
+        def redirect(self, path):
+            self.send_response(303)
+            self.send_header('Location', path)
+            self.send_header('Cache-Control', 'no-store')
+            self.send_header('Content-Length', '0')
+            self.end_headers()
 
         def do_HEAD(self):
             self.do_GET()
 
         def do_GET(self):
+            try:
+                self.get_resource()
+            except AccessError as exc:
+                if exc.status == 401:
+                    self.set_session()
+                self.json_response({'error': str(exc)}, exc.status)
+            except (ValueError, TypeError):
+                self.json_response({'error': '请求参数无效'}, 400)
+
+        def get_resource(self):
             route = unquote(urlsplit(self.path).path)
+            if route == '/api/auth/me':
+                return self.json_response(app.auth.status(self.token()))
+            if route in {'/', '/index.html', '/admin.html'}:
+                if not app.auth.resolve(self.token()):
+                    return self.redirect('/login.html')
+                if route == '/admin.html':
+                    try:
+                        self.identity(admin=True)
+                    except AccessError:
+                        return self.redirect('/?denied=1')
+            if route.startswith('/api/admin/'):
+                actor = self.identity(admin=True)
+                if route == '/api/admin/users':
+                    return self.json_response({'users': app.auth.users(actor)})
+                if route == '/api/admin/settings':
+                    return self.json_response(app.auth.settings(actor))
+                if route == '/api/admin/logs':
+                    query = parse_qs(urlsplit(self.path).query)
+                    cursor = int(query.get('cursor', ['0'])[0])
+                    if cursor < 0:
+                        raise ValueError('日志游标无效')
+                    return self.json_response(app.auth.store.logs(query.get('day', [''])[0], cursor))
+                return self.json_response({'error': '接口不存在'}, 404)
             if route in {'/api/catalog', '/data/catalog.json'}:
+                user = self.identity()
                 try:
                     body, etag = app.catalog_payload(background=parse_qs(urlsplit(self.path).query).get('background') == ['1'])
+                    body, etag = app.auth.catalog(body, etag, user)
                     unchanged = self.headers.get('If-None-Match') == etag
                     self.send_response(304 if unchanged else 200)
                     self.send_header('ETag', etag)
-                    self.send_header('Cache-Control', 'private, no-cache')
+                    self.send_header('Cache-Control', 'private, no-store')
+                    self.send_header('Vary', 'Cookie')
                     self.send_header('Content-Type', 'application/json; charset=utf-8')
                     self.send_header('X-Content-Type-Options', 'nosniff')
                     if not unchanged:
@@ -65,30 +134,47 @@ def handler_for(app):
                 except (OSError, ValueError):
                     return self.json_response({'error': '素材目录暂不可用，请检查磁盘连接和目录配置'}, 503)
             if route == '/api/status':
+                self.identity(admin=True)
                 return self.json_response({**app.scan_status, 'storage': {
                     'mediaRoot': str(app.root), 'dataRoot': str(app.repository.directory.resolve())}})
             if route == '/api/backup':
+                self.identity(admin=True)
                 return self.json_response({'version': 1, 'memories': read_json(app.repository.edits_path, {})})
             if route.startswith('/media/'):
+                user = self.identity()
                 media_id = route.removeprefix('/media/')
+                if not app.auth.can_view(user, media_id):
+                    raise AccessError('没有这条回忆的查看权限')
                 item = app.repository.find(media_id)
                 if not item:
                     return self.json_response({'error': '素材不存在'}, 404)
                 path = (app.root / item['path']).resolve()
                 if not path.is_relative_to(app.root):
                     return self.json_response({'error': '无效素材路径'}, 403)
-                return self.serve_file(path)
+                if path.is_file() and self.command != 'HEAD':
+                    app.auth.viewed(user, media_id, self.client_address[0], item.get('title') or item.get('filename', ''))
+                return self.serve_file(path, 'private, no-store', media_id)
             if route.startswith('/thumbnails/'):
+                user = self.identity()
+                filename = route.removeprefix('/thumbnails/')
+                media_id = filename.split('-')[0]
+                item = app.repository.find(media_id)
+                if not app.auth.can_view(user, media_id):
+                    raise AccessError('没有这条回忆的查看权限')
+                if not item or unquote(urlsplit(item.get('thumbnail', '')).path).rsplit('/', 1)[-1] != filename:
+                    return self.json_response({'error': '封面不存在'}, 404)
                 base = (app.repository.directory / 'thumbnails').resolve()
                 path = (base / route.removeprefix('/thumbnails/')).resolve()
             else:
+                if route.startswith(('/api/', '/data/')):
+                    return self.json_response({'error': '接口不存在'}, 404)
                 base = app.web
                 path = (base / (route.lstrip('/') or 'index.html')).resolve()
             if not path.is_relative_to(base):
                 return self.json_response({'error': '无效路径'}, 403)
-            self.serve_file(path, 'private, max-age=31536000, immutable' if route.startswith('/thumbnails/') else 'no-cache')
+            self.serve_file(path, 'private, no-store' if route.startswith('/thumbnails/') or path.suffix == '.html' else 'no-cache')
 
-        def serve_file(self, path, cache_control='no-cache'):
+        def serve_file(self, path, cache_control='no-cache', media_id=None):
             if not path.is_file():
                 return self.json_response({'error': '文件不存在'}, 404)
             try:
@@ -111,6 +197,8 @@ def handler_for(app):
                     self.send_header('Content-Length', str(end - start + 1))
                     self.send_header('Accept-Ranges', 'bytes')
                     self.send_header('X-Content-Type-Options', 'nosniff')
+                    self.send_header('Referrer-Policy', 'same-origin')
+                    self.send_header('X-Frame-Options', 'DENY')
                     self.send_header('Cache-Control', cache_control)
                     if status == 206:
                         self.send_header('Content-Range', f'bytes {start}-{end}/{size}')
@@ -119,7 +207,12 @@ def handler_for(app):
                         return
                     file.seek(start)
                     remaining = end - start + 1
+                    last_auth_check = 0
                     while remaining > 0:
+                        if media_id and time.monotonic() - last_auth_check > 1:
+                            if not app.auth.can_view(app.auth.resolve(self.token()), media_id):
+                                break
+                            last_auth_check = time.monotonic()
                         chunk = file.read(min(256 * 1024, remaining))
                         if not chunk:
                             break
@@ -130,7 +223,7 @@ def handler_for(app):
 
         def mutate(self):
             origin = self.headers.get('Origin')
-            if origin and urlsplit(origin).netloc != self.headers.get('Host'):
+            if (origin and urlsplit(origin).netloc != self.headers.get('Host')) or self.headers.get('Sec-Fetch-Site') == 'cross-site':
                 return self.json_response({'error': '不允许跨站修改'}, 403)
             if self.headers.get('Content-Type', '').split(';')[0] != 'application/json':
                 return self.json_response({'error': '需要 JSON 请求'}, 415)
@@ -139,21 +232,67 @@ def handler_for(app):
                 if not 0 < length <= 4 * 1024 * 1024:
                     return self.json_response({'error': '请求内容大小超限'}, 413)
                 value = json.loads(self.rfile.read(length))
+                if not isinstance(value, dict):
+                    raise ValueError('请求必须是 JSON 对象')
                 route = urlsplit(self.path).path
+                ip = self.client_address[0]
+                if self.command == 'POST' and route in {'/api/auth/login', '/api/auth/register', '/api/auth/setup'}:
+                    app.auth.throttle(ip)
+                    if route.endswith('/login'):
+                        user, session = app.auth.login(value, ip)
+                    else:
+                        user, session = app.auth.create(value, ip, setup=route.endswith('/setup'))
+                    self.set_session(session)
+                    return self.json_response({'user': user})
+                if self.command == 'POST' and route == '/api/auth/logout':
+                    app.auth.logout(self.token(), app.auth.resolve(self.token()), ip)
+                    self.set_session()
+                    return self.json_response({'ok': True})
+                actor = self.identity()
+                if self.command == 'POST' and route == '/api/auth/password':
+                    app.auth.throttle(ip)
+                    app.auth.change_password(actor, value, ip)
+                    self.set_session()
+                    return self.json_response({'ok': True})
+                app.auth.require_admin(actor)
+                if self.command == 'POST' and route == '/api/admin/users':
+                    user, _ = app.auth.create(value, ip, actor=actor)
+                    return self.json_response({'user': user}, 201)
+                if self.command == 'PATCH' and route.startswith('/api/admin/users/'):
+                    return self.json_response({'user': app.auth.update_user(actor, route.rsplit('/', 1)[-1], value, ip)})
+                if self.command == 'PATCH' and route.startswith('/api/admin/visibility/'):
+                    identity = route.rsplit('/', 1)[-1]
+                    if not app.repository.find(identity):
+                        raise KeyError(identity)
+                    return self.json_response(app.auth.set_visibility(actor, identity, value, ip))
+                if self.command == 'PATCH' and route == '/api/admin/settings':
+                    # Discover media before changing the default for future arrivals.
+                    app.auth.catalog(*app.catalog_payload(), actor)
+                    return self.json_response(app.auth.settings(actor, value, ip))
                 if self.command == 'POST' and route == '/api/batch':
                     app.catalog()
-                    return self.json_response({'count': app.repository.save_many(value)})
+                    count = app.repository.save_many(value)
+                    app.auth.record('media.batch', actor, ip, str(count))
+                    return self.json_response({'count': count})
                 if self.command == 'PATCH' and route.startswith('/api/memories/'):
                     app.repository.save(route.rsplit('/', 1)[-1], validate_edit(value))
+                    app.auth.record('media.edit', actor, ip, route.rsplit('/', 1)[-1])
                     return self.json_response({'ok': True})
                 if self.command == 'POST' and route == '/api/scan':
-                    return self.json_response({'started': app.start_scan()}, 202)
+                    started = app.start_scan()
+                    app.auth.record('library.scan', actor, ip)
+                    return self.json_response({'started': started}, 202)
                 if self.command == 'POST' and route == '/api/import':
                     if not isinstance(value, dict) or value.get('version') != 1:
                         raise ValueError('不支持的备份版本')
                     count = app.repository.import_edits(value.get('memories'))
+                    app.auth.record('library.import', actor, ip, str(count))
                     return self.json_response({'count': count})
                 return self.json_response({'error': '接口不存在'}, 404)
+            except AccessError as exc:
+                if exc.status == 401:
+                    self.set_session()
+                return self.json_response({'error': str(exc)}, exc.status)
             except (ValueError, TypeError) as exc:
                 return self.json_response({'error': str(exc)}, 400)
             except KeyError:

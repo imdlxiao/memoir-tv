@@ -7,5 +7,7 @@ data/
 config.local.json
 dist/
 test-results/
+**/security/accounts.json
+**/security/setup-code.txt
+**/security/audit/
 .DS_Store
-

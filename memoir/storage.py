@@ -22,6 +22,67 @@ def atomic_json(path, value):
         temporary.unlink(missing_ok=True)
 
 
+class SecurityRepository:
+    """Private account state and append-only daily audit, outside the web root."""
+    def __init__(self, directory):
+        self.directory = Path(directory) / 'security'
+        self.directory.mkdir(parents=True, exist_ok=True)
+        self.path = self.directory / 'accounts.json'
+        self.setup_path = self.directory / 'setup-code.txt'
+        self.lock = threading.RLock()
+        self.revision = 0
+        self.state = read_json(self.path, {'users': {}, 'sessions': {}, 'permissions': {},
+            'settings': {'registration': True, 'defaultVisibility': 'admin', 'sessionDays': 30}})
+
+    def save(self, state):
+        atomic_json(self.path, state)
+        self.state = state
+        self.revision += 1
+
+    def setup_code(self):
+        import secrets
+        with self.lock:
+            if self.state['users']:
+                return None
+            if not self.setup_path.exists():
+                with self.setup_path.open('x', encoding='utf-8') as file:
+                    file.write(secrets.token_urlsafe(32))
+            return self.setup_path.read_text(encoding='utf-8').strip()
+
+    def audit(self, event):
+        import datetime as dt
+        now = dt.datetime.now(dt.timezone.utc)
+        with self.lock:
+            folder = self.directory / 'audit'
+            folder.mkdir(exist_ok=True)
+            with (folder / f'{now:%Y-%m-%d}.jsonl').open('a', encoding='utf-8', newline='\n') as file:
+                file.write(json.dumps({'time': now.isoformat(), **event}, ensure_ascii=False) + '\n')
+
+    def logs(self, day='', cursor=0):
+        import re
+        with self.lock:
+            folder = self.directory / 'audit'
+            days = sorted((p.stem for p in folder.glob('*.jsonl')), reverse=True)
+            day = day or (days[0] if days else '')
+            if day and not re.fullmatch(r'\d{4}-\d{2}-\d{2}', day):
+                raise ValueError('日志日期无效')
+            path = folder / f'{day}.jsonl'
+            if not path.exists():
+                return {'days': days, 'day': day, 'items': [], 'cursor': None}
+            with path.open('rb') as file:
+                end = min(cursor or path.stat().st_size, path.stat().st_size)
+                start = max(0, end - 65536)
+                file.seek(start)
+                if start:
+                    file.readline()
+                    start = file.tell()
+                lines = file.read(end - start).splitlines(keepends=True)
+                selected = lines[-100:]
+                next_cursor = end - sum(map(len, selected))
+                return {'days': days, 'day': day, 'items': [json.loads(line) for line in reversed(selected)],
+                        'cursor': next_cursor if next_cursor > 0 else None}
+
+
 class Repository:
     def __init__(self, directory):
         self.directory = Path(directory)

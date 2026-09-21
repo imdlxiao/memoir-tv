@@ -8,6 +8,49 @@ VIDEO_EXTENSIONS = {'.mp4', '.mov', '.m4v', '.webm', '.mkv', '.avi'}
 EDITABLE = {'title', 'description', 'date', 'precision', 'location', 'tags', 'favorite', 'coordinates'}
 
 
+def validate_account(value):
+    if not isinstance(value, dict):
+        raise ValueError('账号资料格式错误')
+    username, password, phone = value.get('username'), value.get('password'), value.get('phone', '')
+    if not isinstance(username, str) or not re.fullmatch(r'[\w.-]{3,32}', username, re.UNICODE):
+        raise ValueError('用户名需为 3–32 位文字、数字、下划线、点或短横线')
+    validate_password(password)
+    if not isinstance(phone, str) or (phone and not re.fullmatch(r'\+?[0-9 ()-]{6,24}', phone)):
+        raise ValueError('手机号格式不正确，可留空')
+    return username, password, phone
+
+
+def validate_password(password):
+    if not isinstance(password, str) or not 12 <= len(password) <= 128:
+        raise ValueError('密码需为 12–128 位，至少包含字母和数字')
+    if not any(c.isalpha() for c in password) or not any(c.isdigit() for c in password):
+        raise ValueError('密码至少包含字母和数字')
+    return password
+
+
+def validate_visibility(value, users):
+    if not isinstance(value, dict) or set(value) - {'scope', 'users'}:
+        raise ValueError('可见范围格式错误')
+    scope, selected = value.get('scope'), value.get('users', [])
+    if scope not in {'all', 'admin', 'selected'} or not isinstance(selected, list):
+        raise ValueError('可见范围无效')
+    if len(selected) > 1000 or any(not isinstance(uid, str) or uid not in users for uid in selected):
+        raise ValueError('指定用户不存在')
+    if scope == 'selected' and not selected:
+        raise ValueError('请至少选择一位用户')
+    return {'scope': scope, 'users': list(dict.fromkeys(selected)) if scope == 'selected' else []}
+
+
+def validate_security_settings(value):
+    if not isinstance(value, dict) or set(value) != {'registration', 'defaultVisibility', 'sessionDays'}:
+        raise ValueError('设置格式错误')
+    if type(value['registration']) is not bool or value['defaultVisibility'] not in {'admin', 'all'}:
+        raise ValueError('注册或默认可见范围无效')
+    if type(value['sessionDays']) is not int or not 1 <= value['sessionDays'] <= 90:
+        raise ValueError('登录有效期应为 1–90 天；调整后新登录生效')
+    return dict(value)
+
+
 def validate_coordinates(value):
     """WGS84 degrees; null explicitly removes an original GPS position."""
     if value is None:

@@ -3,6 +3,7 @@
   "data_root": "data",
   "host": "127.0.0.1",
   "port": 8765,
+  "secure_cookies": false,
   "ffmpeg": "ffmpeg",
   "exiftool": "exiftool"
 }

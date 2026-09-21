@@ -8,6 +8,7 @@ import unittest
 from http.server import ThreadingHTTPServer
 from pathlib import Path
 from unittest.mock import patch
+from auth_support import owner_session
 from memoir.inventory import DirectoryInventory
 from memoir.http import Application, handler_for
 from memoir.scanner import scan
@@ -78,24 +79,25 @@ class InventoryTests(unittest.TestCase):
             repository = Repository(root / 'data')
             repository.replace_index(scan(media, repository.directory, previews=False))
             app = Application(media, repository, root / 'web', 'missing-ffmpeg')
+            cookie = owner_session(app)
             server = ThreadingHTTPServer(('127.0.0.1', 0), handler_for(app))
             threading.Thread(target=server.serve_forever, daemon=True).start()
             connection = http.client.HTTPConnection('127.0.0.1', server.server_port)
             try:
-                connection.request('GET', '/data/catalog.json')
+                connection.request('GET', '/data/catalog.json', headers={'Cookie': cookie})
                 response = connection.getresponse(); etag = response.getheader('ETag')
                 item = json.loads(response.read())['items'][0]
                 with patch('memoir.library.scan', side_effect=AssertionError('Unchanged catalog must not rescan')):
-                    connection.request('GET', '/data/catalog.json?background=1', headers={'If-None-Match': etag})
+                    connection.request('GET', '/data/catalog.json?background=1', headers={'If-None-Match': etag, 'Cookie': cookie})
                     response = connection.getresponse()
                     self.assertEqual(response.status, 304); self.assertEqual(response.read(), b'')
                 repository.save(item['id'], {'title': 'new title'})
-                connection.request('GET', '/data/catalog.json?background=1', headers={'If-None-Match': etag})
+                connection.request('GET', '/data/catalog.json?background=1', headers={'If-None-Match': etag, 'Cookie': cookie})
                 response = connection.getresponse()
                 self.assertEqual(response.status, 200)
                 self.assertEqual(json.loads(response.read())['items'][0]['title'], 'new title')
                 source.unlink()
-                connection.request('GET', '/data/catalog.json', headers={'If-None-Match': etag})
+                connection.request('GET', '/data/catalog.json', headers={'If-None-Match': etag, 'Cookie': cookie})
                 response = connection.getresponse()
                 self.assertEqual(json.loads(response.read())['items'], [])
             finally:

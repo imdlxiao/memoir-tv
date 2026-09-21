@@ -5,6 +5,7 @@ from pathlib import Path
 from .scanner import scan
 from .storage import read_json
 from .inventory import DirectoryInventory
+from .auth import AuthService
 
 
 class Application:
@@ -17,6 +18,7 @@ class Application:
         self.scan_status = {'running': False, 'error': ''}
         self.inventory = DirectoryInventory(self.root)
         self.last_check = 0
+        self.auth = AuthService(repository.directory)
 
     def _synchronize(self, force=False, background=False, snapshot=True):
         # Never hold this lock while decoding video. A page refresh must not wait
