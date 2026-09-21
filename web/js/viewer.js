@@ -16,11 +16,13 @@ import { preferences, savePreference } from './preferences.js';
 import { captureHTML } from './capture.js';
 import { validCoordinates } from './geo.js';
 import { canEdit } from './account.js';
+import { attachPlayback } from './playback.js';
 
 let playlist = [],
   index = 0,
   slideshow = null,
   detachProgress = null,
+  detachPlayback = null,
   continuous = false,
   interval = 8,
   speed = 1;
@@ -29,6 +31,8 @@ function stopSlideshow() {
   slideshow = null;
 }
 function releaseVideo() {
+  detachPlayback?.();
+  detachPlayback = null;
   detachProgress?.();
   detachProgress = null;
   const video = $('video', $('#viewer-dialog'));
@@ -81,6 +85,16 @@ function render() {
     dialog.close();
   };
   const details = $('.viewer-details', dialog);
+  if (video) {
+    $('.viewer-options', dialog).insertAdjacentHTML(
+      'beforeend',
+      `<label>画质<select data-quality aria-label="播放画质"><option value="auto">自动 · 优先流畅</option><option value="smooth">流畅 · 720p</option><option value="original">原画</option></select></label><button data-prepare-playback hidden>生成流畅版</button>`,
+    );
+    details.insertAdjacentHTML(
+      'beforebegin',
+      '<p class="playback-note" data-playback-status role="status"></p><details class="playback-details"><summary>播放诊断</summary><p data-playback-metrics></p></details>',
+    );
+  }
   details.insertAdjacentHTML('afterbegin', captureHTML(item));
   // Keep the summary first so the native disclosure remains keyboard accessible.
   details.prepend($('summary', details));
@@ -122,12 +136,27 @@ function render() {
   const media = $('video,img', $('.viewer-media', dialog));
   media.addEventListener('error', () => {
     stopSlideshow();
+    if (video) {
+      $('[data-playback-status]', dialog).textContent =
+        `播放失败（错误码 ${media.error?.code || '未知'}）。可尝试流畅版；权限变更或原片移出时请刷新首页。`;
+      media.hidden = true;
+      $('.viewer-error', dialog)?.remove();
+      media.insertAdjacentHTML(
+        'afterend',
+        `<div class="viewer-error"><p>这份视频暂时无法播放，可切换流畅版或下载原片查看。</p><a href="${e(mediaURL(item))}" download="${e(item.filename)}">下载原片</a></div>`,
+      );
+      return;
+    }
     detachProgress?.();
     detachProgress = null;
     $('.viewer-media', dialog).innerHTML =
       `<div class="viewer-error"><p>这份原片暂时无法打开。查看权限可能已变更、文件已移出，或浏览器不支持该编码。请返回首页刷新；可见的原片也可下载后查看。</p><a href="${e(mediaURL(item))}" download="${e(item.filename)}">下载原片</a></div>`;
   });
   if (video) {
+    media.addEventListener('loadeddata', () => {
+      media.hidden = false;
+      $('.viewer-error', dialog)?.remove();
+    });
     $('[data-remote-play]', dialog).onclick = () => {
       if (media.paused) playVideo();
       else media.pause();
@@ -145,6 +174,7 @@ function render() {
       notice.hidden = false;
       $('span', notice).textContent = `接着上次的 ${clockLabel(time)} 继续看`;
     });
+    detachPlayback = attachPlayback(media, item, dialog);
     $('[data-restart]', dialog).onclick = () => {
       media.currentTime = 0;
       $('.resume-notice', dialog).hidden = true;

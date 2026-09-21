@@ -32,3 +32,4 @@ jobs:
       - run: python tests/browser_map.py
       - run: python tests/browser_auth.py
       - run: python tests/browser_tv.py
+      - run: python tests/browser_playback.py

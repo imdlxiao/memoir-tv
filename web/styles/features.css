@@ -230,6 +230,17 @@
   margin-left: auto;
   color: #a7b6a0;
 }
+[data-playback-status] {
+  margin: 0;
+  padding: 10px 20px;
+  color: #b9cdb1;
+  font-size: 12px;
+  line-height: 1.6;
+}
+[data-playback-metrics] {
+  line-height: 1.8;
+  color: #b9cdb1;
+}
 .resume-notice {
   display: flex;
   align-items: center;
@@ -244,14 +255,16 @@
   text-decoration: underline;
   padding: 4px;
 }
-.viewer-details {
+.viewer-details,
+.playback-details {
   margin: 0 20px 15px;
   border-top: 1px solid #303c32;
   padding-top: 10px;
   color: #aab6a6;
   font-size: 11px;
 }
-.viewer-details summary {
+.viewer-details summary,
+.playback-details summary {
   cursor: pointer;
   width: fit-content;
 }
@@ -355,7 +368,8 @@
     margin: 0;
     font-size: 10px;
   }
-  .viewer-details {
+  .viewer-details,
+  .playback-details {
     margin: 0 12px 12px;
   }
   .resume-notice {
