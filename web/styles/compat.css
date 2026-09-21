@@ -37,25 +37,32 @@
     max-width: 600px;
   }
 }
-.legacy-browser dialog {
-  max-height: calc(var(--legacy-height) * 0.9);
+.measured-viewport dialog {
+  max-height: calc(var(--viewport-height) * 0.9);
   overflow: auto;
 }
-.legacy-browser .viewer-dialog {
-  max-height: calc(var(--legacy-height) * 0.95);
+.measured-viewport .viewer-dialog {
+  max-height: calc(var(--viewport-height) * 0.95);
 }
-.legacy-browser .viewer-media video,
-.legacy-browser .viewer-media img,
-.legacy-browser .viewer-media.zoomed {
-  max-height: calc(var(--legacy-height) * 0.7);
+.measured-viewport .viewer-media video,
+.measured-viewport .viewer-media img,
+.measured-viewport .viewer-media.zoomed {
+  max-height: calc(var(--viewport-height) * 0.7);
 }
-.legacy-browser .map-dialog {
-  height: var(--legacy-height);
-  max-height: var(--legacy-height);
+.measured-viewport .map-dialog {
+  height: var(--viewport-height);
+  max-height: var(--viewport-height);
   overflow: hidden;
 }
-.legacy-browser .sidebar {
-  height: var(--legacy-height);
+.measured-viewport .sidebar {
+  height: var(--viewport-height);
+}
+.tv-remote.measured-viewport .viewer-media {
+  min-height: 120px;
+}
+.tv-remote.measured-viewport .viewer-media video,
+.tv-remote.measured-viewport .viewer-media img {
+  max-height: calc(var(--viewport-height) * 0.95 - 240px);
 }
 .legacy-browser .viewer-options > * + *,
 .legacy-browser .viewer-tools > * + *,

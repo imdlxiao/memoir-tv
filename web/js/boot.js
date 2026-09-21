@@ -8,12 +8,13 @@
     legacy = true;
   }
   if (location.search.indexOf('compat=1') >= 0) legacy = true;
-  if (legacy) {
-    document.documentElement.classList.add('legacy-browser');
+  if (legacy) document.documentElement.classList.add('legacy-browser');
+  if (legacy || /TVBrowser|Android TV|SmartTV|SMART-TV|GoogleTV|HbbTV/i.test(navigator.userAgent)) {
+    document.documentElement.classList.add('measured-viewport');
     // Some embedded WebViews calculate vh against their initial zero-height layout.
     var syncViewport = function () {
       document.documentElement.style.setProperty(
-        '--legacy-height',
+        '--viewport-height',
         Math.max(1, window.innerHeight) + 'px',
       );
     };
