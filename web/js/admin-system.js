@@ -4,9 +4,11 @@ import { escapeHTML as e } from './utils.js';
 import { displayTime } from './admin-users.js';
 export async function renderSettings(root, notify) {
   const settings = await accountRequest('/api/admin/settings');
-  root.innerHTML = `<section class="admin-panel"><h2>家庭空间设置</h2><form style="max-width:480px"><label class="check-label"><input name="registration" type="checkbox" ${settings.registration ? 'checked' : ''} />允许家人自行注册普通账号</label><label>新发现素材的默认可见范围<select name="defaultVisibility"><option value="admin">仅超级管理员可见</option><option value="all">全部用户可见</option></select><small>已有素材保持各自的可见范围，不会随默认值改变。</small></label><label>记住登录的天数<input name="sessionDays" type="number" min="1" max="90" required value="${settings.sessionDays}" /><small>1–90 天，对之后的新登录生效。停用账号或重置密码会立即撤销已有登录。</small></label><button class="access-primary">保存设置</button></form><p class="access-note">角色权限固定为超级管理员和普通用户。普通用户只能浏览，不能编辑回忆或更改设置。</p></section>`;
+  root.innerHTML = `<section class="admin-panel"><h2>家庭空间设置</h2><form style="max-width:480px"><label class="check-label"><input name="registration" type="checkbox" ${settings.registration ? 'checked' : ''} />允许家人自行注册普通账号</label><label>新视频的默认可见范围<select name="defaultVideoVisibility"><option value="all">全部用户可见</option><option value="admin">仅超级管理员可见</option></select></label><label>新照片的默认可见范围<select name="defaultVisibility"><option value="admin">仅超级管理员可见</option><option value="all">全部用户可见</option></select><small>已有素材保持各自的可见范围，不会随默认值改变。</small></label><label>记住登录的天数<input name="sessionDays" type="number" min="1" max="90" required value="${settings.sessionDays}" /><small>1–90 天，对之后的新登录生效。停用账号或重置密码会立即撤销已有登录。</small></label><button class="access-primary">保存设置</button></form><p class="access-note">角色权限固定为超级管理员和普通用户。普通用户只能浏览，不能编辑回忆或更改设置。</p></section>`;
   const form = root.querySelector('form');
   form.elements.defaultVisibility.value = settings.defaultVisibility;
+  form.elements.defaultVideoVisibility.value =
+    settings.defaultVideoVisibility ?? settings.defaultVisibility;
   form.onsubmit = async (event) => {
     event.preventDefault();
     const button = form.querySelector('button');
@@ -15,6 +17,7 @@ export async function renderSettings(root, notify) {
       await accountRequest('/api/admin/settings', 'PATCH', {
         registration: form.elements.registration.checked,
         defaultVisibility: form.elements.defaultVisibility.value,
+        defaultVideoVisibility: form.elements.defaultVideoVisibility.value,
         sessionDays: Number(form.elements.sessionDays.value),
       });
       notify('设置已保存。');
