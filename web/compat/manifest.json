@@ -21,7 +21,8 @@
     "web/js/library.js": "2bff58deec1226ff47556c3f0d3d88b6745e3e85eb95939dc8220fde68567c9e",
     "web/js/login.js": "8e72395e73b4aba2446e1462f5611e5ce806c3060a2ebf0fbba26052f64a6de0",
     "web/js/map.js": "b599b0a1ee85167f9ac1c0086211720397900c998583b8078a8c1501a1d358ae",
-    "web/js/playback.js": "912b29e6fa959a1d4aee8d624f5c259f8354294802df85af577ee3c741249c1f",
+    "web/js/playback-diagnostics.js": "e856c7a8a05d0ca3b33d9a6f810920841b5ff68b3f5efc7f928508ad959c02f4",
+    "web/js/playback.js": "78236f9cbc1d0703c02e13e437b9f3e7f129135082631915810e89e642b85d8c",
     "web/js/preferences.js": "1fb02f1c739c477a5009aa93e737b6abe7b18b341a064cb9e610d42d45971705",
     "web/js/progress.js": "bf8213dad8c0752bd513851d26ed630c35ff2b9a33f757055df14103b7d2999d",
     "web/js/remote.js": "c25fee9b99291b63438eb97fb56664e7ba0cec49ebcd209cfecb3a6b4460e563",
@@ -30,12 +31,12 @@
     "web/js/sync.js": "2d48e47dc1b95acdb7424522b9897c79dd08a15584b9a96fe98142ed531d6bb9",
     "web/js/tv.js": "c5b5c376201cad8aec5a320d5c2bc3a52304c80ed50fee0fb1eb874fda5ac413",
     "web/js/utils.js": "b8841f0e66c2d9c5e67324e22f9186e8fa1597fa02eabcf996aeaeca486d7045",
-    "web/js/viewer.js": "e905e383e76712285ee34bfbc7fcc29444bc3012d238de0698eb8a22ecca3c6a",
+    "web/js/viewer.js": "4c778a119f934469ddb4ff3ba2a62aab4485f1cc65826a1200da36acb72028c7",
     "scripts/build_web.py": "2c8c82dfcd551ee22c4e85d83d828d73745a61e2a73c0d19945fdd5a009e9152"
   },
   "outputs": {
     "admin.js": "bb7c450337cbde5d240eca2fd98aa748a8ac7ddb49cba4ebb8707368b058ed96",
-    "app.js": "2ff3e633160f41d46f153158bafec61c7de492c234a1f6b8e65739a18fc86339",
+    "app.js": "b928c1bb3692782a76c9a60a5bf119cb2a6a347a001f6e80ab7fc592ec6d9a37",
     "login.js": "5253c77f1e2b41816923ce3cca0c4dae0b228c2ed6cc4cb7b186ce1feac3bb7f"
   }
 }

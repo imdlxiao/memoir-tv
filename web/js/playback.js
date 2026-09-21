@@ -1,18 +1,17 @@
 /* Author: donglixiao · Playback quality, reusable copies and local buffer diagnostics. */
 import { getMode } from './api.js';
 import { mediaURL } from './utils.js';
+import { attachDiagnostics } from './playback-diagnostics.js';
 
 export function attachPlayback(video, item, root) {
   const select = root.querySelector('[data-quality]');
   const status = root.querySelector('[data-playback-status]');
   const prepare = root.querySelector('[data-prepare-playback]');
-  const metrics = root.querySelector('[data-playback-metrics]');
   let disposed = false,
     poll = null,
     busy = false,
     rendition = null,
-    stalls = 0,
-    waiting = false;
+    createPending = false;
   let pendingRestore = null;
   const library = getMode() === 'library';
   const endpoint = `/api/playback/${encodeURIComponent(item.id)}`;
@@ -35,12 +34,23 @@ export function attachPlayback(video, item, root) {
   const switchSource = (url) => {
     const next = new URL(url, location.href).href;
     if (video.src === next) return;
-    pendingRestore = {
+    pendingRestore = pendingRestore || {
       time: video.readyState ? video.currentTime || 0 : null,
       paused: video.paused,
       rate: video.playbackRate,
     };
     video.src = next;
+    video.load();
+  };
+  const waitForSmooth = () => {
+    if (!video.getAttribute('src')) return;
+    pendingRestore = pendingRestore || {
+      time: video.readyState ? video.currentTime : null,
+      paused: video.paused,
+      rate: video.playbackRate,
+    };
+    video.pause();
+    video.removeAttribute('src');
     video.load();
   };
   const apply = () => {
@@ -55,14 +65,22 @@ export function attachPlayback(video, item, root) {
       switchSource(rendition.url);
       status.textContent = '流畅版 · 最高 720p · H.264';
     } else {
+      if (select.value === 'smooth') waitForSmooth();
+      else if (!video.getAttribute('src')) switchSource(mediaURL(item));
+      const active =
+        select.value === 'smooth' ? '已停止原画，等待流畅版；也可切回原画' : '实际仍在播放原画';
       status.textContent =
         rendition?.state === 'processing'
-          ? `流畅版生成中 ${rendition.progress || 0}% · 目前播放原画`
-          : rendition?.message || '目前播放原画，可生成流畅版降低缓冲等待';
+          ? `流畅版生成中 ${rendition.progress || 0}% · ${active}`
+          : `${rendition?.message || '流畅版尚未生成'} · ${active}`;
     }
   };
   const read = async (create = false) => {
-    if (busy || disposed || !library) return;
+    if (disposed || !library) return;
+    if (busy) {
+      createPending = createPending || create;
+      return;
+    }
     busy = true;
     try {
       const response = await fetch(endpoint, {
@@ -90,6 +108,10 @@ export function attachPlayback(video, item, root) {
       if (!disposed) status.textContent = error.message;
     } finally {
       busy = false;
+      if (createPending && !disposed) {
+        createPending = false;
+        read(true);
+      }
     }
   };
   select.onchange = () => {
@@ -97,43 +119,12 @@ export function attachPlayback(video, item, root) {
     if (select.value === 'smooth' && rendition?.state !== 'ready') read(true);
   };
   prepare.onclick = () => read(true);
-  const onWaiting = () => {
-    if (!video.seeking && !video.paused && video.currentTime > 0 && !waiting) stalls++;
-    waiting = true;
-  };
-  const onPlaying = () => {
-    waiting = false;
-  };
-  video.addEventListener('waiting', onWaiting);
-  video.addEventListener('playing', onPlaying);
-  const diagnose = () => {
-    let ahead = 0;
-    for (let i = 0; i < video.buffered.length; i++) {
-      if (
-        video.buffered.start(i) <= video.currentTime &&
-        video.buffered.end(i) >= video.currentTime
-      )
-        ahead = video.buffered.end(i) - video.currentTime;
-    }
-    const quality = video.getVideoPlaybackQuality?.();
-    const dropped = quality?.droppedVideoFrames ?? video.webkitDroppedFrameCount;
-    const duration = item.capture?.duration || video.duration;
-    const bitrate = duration > 0 ? ((item.size * 8) / duration / 1000000).toFixed(1) : '未知';
-    metrics.textContent =
-      `已缓冲 ${ahead.toFixed(1)} 秒 · 等待 ${stalls} 次 · 丢帧 ${dropped ?? '浏览器未提供'} · 原片平均 ${bitrate} Mbps。` +
-      (waiting && ahead < 1
-        ? ' 缓冲不足：后续数据暂未到达，可切换流畅版。'
-        : ' 缓冲充足仍跳帧时，请尝试流畅版降低解码负担。');
-  };
-  const timer = setInterval(diagnose, 1000);
-  diagnose();
+  const detachDiagnostics = attachDiagnostics(video, item, root, () => rendition);
   if (library) read();
   return () => {
     disposed = true;
-    clearInterval(timer);
+    detachDiagnostics();
     clearTimeout(poll);
     video.removeEventListener('loadedmetadata', restore);
-    video.removeEventListener('waiting', onWaiting);
-    video.removeEventListener('playing', onPlaying);
   };
 }

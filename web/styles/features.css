@@ -208,7 +208,8 @@
   font-size: 11px;
 }
 .viewer-options button,
-.viewer-options select {
+.viewer-options select,
+[data-playback-test] {
   border: 1px solid #44513e;
   background: #202d23;
   color: #dce6d5;

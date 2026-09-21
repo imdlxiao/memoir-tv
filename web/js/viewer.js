@@ -92,7 +92,7 @@ function render() {
     );
     details.insertAdjacentHTML(
       'beforebegin',
-      '<p class="playback-note" data-playback-status role="status"></p><details class="playback-details"><summary>播放诊断</summary><p data-playback-metrics></p></details>',
+      '<p class="playback-note" data-playback-status role="status"></p><details class="playback-details"><summary>播放诊断</summary><p data-playback-metrics></p><button data-playback-test>暂停并检测连接</button><p data-playback-test-result role="status"></p></details>',
     );
   }
   details.insertAdjacentHTML('afterbegin', captureHTML(item));
