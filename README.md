@@ -17,6 +17,7 @@
 - 浅色 / 深色模式、手机底部导航、电视方向键导航与连续放映。
 - 递归扫描、封面缓存、手动刷新；重新扫描不覆盖人工编辑。
 - 编辑记录导入导出、原子写入与上一版自动备份。
+- 登录注册、持久登录、两级角色、用户启停与密码重置；单条照片／视频可设为全部用户、仅管理员或指定用户可见，配套访问与操作日志。
 - Python 标准库后端与原生 JS，地图组件本地托管，支持本地服务和纯静态导出。
 
 ## 启动
@@ -32,6 +33,8 @@ python -m memoir serve
 ```
 
 访问 **http://127.0.0.1:8765**。首次启动先快速生成索引，后台准备封面。也可预先运行 `python -m memoir scan`。
+
+首次访问进入管理员初始化页：从 `data_root/security/setup-code.txt` 读取一次性初始化码，设置自己的管理员账号和密码。此后家人可注册普通账号。所有素材初始仅管理员可见；在右上角账号菜单进入管理页，为家人开放内容。完整操作见 [用户与权限](docs/ACCOUNTS.md)。
 
 当前电脑已配置 `F:/家庭回忆库/原片`，索引与缓存位于 `F:/家庭回忆库/索引与缓存`，本机配置与家庭数据不提交 Git。本地服务在刷新页面时核对目录变化；页面停留期间每 5 秒同步新增或移出的素材，编辑或播放时暂缓更新界面。未变化的目录和索引复用缓存，原地覆盖文件最多约 60 秒核对一次。也可在「管理回忆库」手动强制刷新。素材由文件系统管理，不提供网页上传。
 
@@ -57,13 +60,15 @@ python -m memoir serve --host 0.0.0.0
 
 收藏固定入口可尝试 `http://电脑名称.local:8765/`（运行 `hostname` 查看名称），使用前请在手机实测；需要设备与网络支持 mDNS。电视不支持时，可在路由器保留电脑的 DHCP 地址。具体条件见 [收藏固定网址](docs/DEPLOYMENT.md#收藏固定网址)。
 
-默认仅监听本机。局域网模式无账号权限，可访问地址的人能查看和编辑记录；不要直接暴露到公网。
+默认仅监听本机。局域网模式需要登录，普通用户只读且仅看到授权内容。当前 HTTP 不加密网络传输；可信家庭网络外使用前须部署 HTTPS，说明见 [用户与权限](docs/ACCOUNTS.md)。
 
 ## 静态读取与发布
 
 `data/catalog.json` 是扫描索引，`data/memories.json` 是独立编辑记录。服务只是提供原片和 JSON 编辑接口，不需要数据库。视频使用 HTTP Range，不会一次读取整个大文件。
 
 完全静态部署：
+
+启用账号后，以下命令默认拒绝导出；显式添加 `--public` 仅导出全部用户可见的公开副本，目标须为空目录。静态副本没有登录保护。
 
 ```powershell
 python -m memoir export --media-base /family-media/ --out dist
@@ -82,6 +87,7 @@ python -m memoir export --media-base /family-media/ --out dist
 - 编辑备份不含原片；完整备份需同时保留素材、数据目录的 `memories.json`、`identities.json` 和本机配置。
 - 默认 ID 来自相对路径；受控迁移通过 `identities.json` 沿用旧 ID。普通手动改名仍可能成为新条目，旧编辑记录保留但不会自动关联。
 - `data/memories.backup.json` 保留上一次写入前的记录，不代替长期备份。
+- 完整备份还应包含 `data_root/security/` 中的账号、权限与审计；网页标注备份不包含这些数据。
 
 ## 代码结构
 
@@ -89,6 +95,7 @@ python -m memoir export --media-base /family-media/ --out dist
 memoir/
   domain.py        日期、字段、扩展名与校验
   storage.py       JSON 仓储、锁、原子写入、备份
+  auth.py          账号身份、持久会话、内容授权与审计编排
   scanner.py       只读扫描与封面缓存
   metadata.py      本机原片参数读取、GPS 与指纹缓存
   library.py       目录同步、后台预览任务与索引一致性
@@ -117,6 +124,7 @@ python -m pip install -r requirements-dev.txt
 python tests/browser_smoke.py
 python tests/browser_features.py
 python tests/browser_map.py
+python tests/browser_auth.py
 ```
 
 浏览器验收需已安装 Chrome，使用临时素材与记录，不修改真实家庭数据。覆盖日期编辑与持久化、搜索、筛选、珍藏、照片、备份恢复、电视、深色模式和 360/390/768/1440/1920 宽度，以及子路径静态部署、静态编辑持久化和不支持的视频格式回退。验收结果见 [VALIDATION.md](docs/VALIDATION.md)。
