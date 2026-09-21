@@ -143,9 +143,9 @@ def handler_for(app):
             if route.startswith('/media/'):
                 user = self.identity()
                 media_id = route.removeprefix('/media/')
-                if not app.auth.can_view(user, media_id):
-                    raise AccessError('没有这条回忆的查看权限')
                 item = app.repository.find(media_id)
+                if not app.auth.can_view(user, media_id, item.get('kind') if item else None):
+                    raise AccessError('没有这条回忆的查看权限')
                 if not item:
                     return self.json_response({'error': '素材不存在'}, 404)
                 path = (app.root / item['path']).resolve()
@@ -153,13 +153,13 @@ def handler_for(app):
                     return self.json_response({'error': '无效素材路径'}, 403)
                 if path.is_file() and self.command != 'HEAD':
                     app.auth.viewed(user, media_id, self.client_address[0], item.get('title') or item.get('filename', ''))
-                return self.serve_file(path, 'private, no-store', media_id)
+                return self.serve_file(path, 'private, no-store', media_id, item.get('kind'))
             if route.startswith('/thumbnails/'):
                 user = self.identity()
                 filename = route.removeprefix('/thumbnails/')
                 media_id = filename.split('-')[0]
                 item = app.repository.find(media_id)
-                if not app.auth.can_view(user, media_id):
+                if not app.auth.can_view(user, media_id, item.get('kind') if item else None):
                     raise AccessError('没有这条回忆的查看权限')
                 if not item or unquote(urlsplit(item.get('thumbnail', '')).path).rsplit('/', 1)[-1] != filename:
                     return self.json_response({'error': '封面不存在'}, 404)
@@ -174,7 +174,7 @@ def handler_for(app):
                 return self.json_response({'error': '无效路径'}, 403)
             self.serve_file(path, 'private, no-store' if route.startswith('/thumbnails/') or path.suffix == '.html' else 'no-cache')
 
-        def serve_file(self, path, cache_control='no-cache', media_id=None):
+        def serve_file(self, path, cache_control='no-cache', media_id=None, media_kind=None):
             if not path.is_file():
                 return self.json_response({'error': '文件不存在'}, 404)
             try:
@@ -210,7 +210,7 @@ def handler_for(app):
                     last_auth_check = 0
                     while remaining > 0:
                         if media_id and time.monotonic() - last_auth_check > 1:
-                            if not app.auth.can_view(app.auth.resolve(self.token()), media_id):
+                            if not app.auth.can_view(app.auth.resolve(self.token()), media_id, media_kind):
                                 break
                             last_auth_check = time.monotonic()
                         chunk = file.read(min(256 * 1024, remaining))

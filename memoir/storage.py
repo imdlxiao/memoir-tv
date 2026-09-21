@@ -32,7 +32,7 @@ class SecurityRepository:
         self.lock = threading.RLock()
         self.revision = 0
         self.state = read_json(self.path, {'users': {}, 'sessions': {}, 'permissions': {},
-            'settings': {'registration': True, 'defaultVisibility': 'admin', 'sessionDays': 30}})
+            'settings': {'registration': True, 'defaultVisibility': 'admin', 'defaultVideoVisibility': 'all', 'sessionDays': 30}})
 
     def save(self, state):
         atomic_json(self.path, state)

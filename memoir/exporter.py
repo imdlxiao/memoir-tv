@@ -3,6 +3,7 @@ import shutil
 from pathlib import Path
 from urllib.parse import quote, urlsplit
 from .storage import atomic_json, read_json
+from .domain import default_visibility
 
 
 def export_static(web, repository, media_root, media_base, out, allow_public=False):
@@ -21,8 +22,8 @@ def export_static(web, repository, media_root, media_base, out, allow_public=Fal
         if out.exists() and any(out.iterdir()):
             raise ValueError('公开副本必须导出到新建的空目录，避免残留旧私密素材')
         permissions = security.get('permissions', {})
-        default = security['settings']['defaultVisibility']
-        catalog['items'] = [item for item in catalog['items'] if permissions.get(item['id'], {'scope': default})['scope'] == 'all']
+        catalog['items'] = [item for item in catalog['items'] if permissions.get(item['id'],
+            {'scope': default_visibility(security['settings'], item.get('kind'))})['scope'] == 'all']
         catalog['warnings'] = []
     shutil.copytree(web, out, dirs_exist_ok=True)
     for item in catalog['items']:

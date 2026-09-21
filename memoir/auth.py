@@ -5,7 +5,7 @@ import hmac
 import secrets
 import threading
 import time
-from .domain import validate_account, validate_password, validate_visibility, validate_security_settings
+from .domain import validate_account, validate_password, validate_visibility, validate_security_settings, default_visibility
 from .storage import SecurityRepository
 
 
@@ -204,17 +204,17 @@ class AuthService:
             self.record('account.recover', user, 'local-cli', user['id'])
             return user['username']
 
-    def visibility(self, identity):
+    def visibility(self, identity, kind=None):
         with self.store.lock:
             return copy.deepcopy(self.store.state['permissions'].get(identity,
-                {'scope': self.store.state['settings']['defaultVisibility'], 'users': []}))
+                {'scope': default_visibility(self.store.state['settings'], kind), 'users': []}))
 
-    def can_view(self, user, identity):
+    def can_view(self, user, identity, kind=None):
         if not user:
             return False
         if user['role'] == 'admin':
             return True
-        permission = self.visibility(identity)
+        permission = self.visibility(identity, kind)
         return permission['scope'] == 'all' or (permission['scope'] == 'selected' and user['id'] in permission['users'])
 
     def set_visibility(self, actor, identity, value, ip):
@@ -232,7 +232,7 @@ class AuthService:
         with self.store.lock:
             if value is not None:
                 state = copy.deepcopy(self.store.state)
-                state['settings'] = validate_security_settings(value)
+                state['settings'] = {**state['settings'], **validate_security_settings(value)}
                 self.store.save(state)
                 self.record('settings.update', actor, ip)
             return copy.deepcopy(self.store.state['settings'])
@@ -245,11 +245,11 @@ class AuthService:
                 return self.catalog_cache[key]
             # Fix the default at first discovery; changing the setting affects new media only.
             raw = json.loads(body)
-            missing = [item['id'] for item in raw['items'] if item['id'] not in self.store.state['permissions']]
+            missing = [item for item in raw['items'] if item['id'] not in self.store.state['permissions']]
             if missing:
                 state = copy.deepcopy(self.store.state)
-                for identity in missing:
-                    state['permissions'][identity] = {'scope': state['settings']['defaultVisibility'], 'users': []}
+                for item in missing:
+                    state['permissions'][item['id']] = {'scope': default_visibility(state['settings'], item.get('kind')), 'users': []}
                 self.store.save(state)
             key = (etag, self.store.revision, user['id'])
             if key in self.catalog_cache:

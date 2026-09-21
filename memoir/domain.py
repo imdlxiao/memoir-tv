@@ -42,13 +42,23 @@ def validate_visibility(value, users):
 
 
 def validate_security_settings(value):
-    if not isinstance(value, dict) or set(value) != {'registration', 'defaultVisibility', 'sessionDays'}:
+    required = {'registration', 'defaultVisibility', 'sessionDays'}
+    if not isinstance(value, dict) or not required <= set(value) or set(value) - required - {'defaultVideoVisibility'}:
         raise ValueError('设置格式错误')
     if type(value['registration']) is not bool or value['defaultVisibility'] not in {'admin', 'all'}:
         raise ValueError('注册或默认可见范围无效')
     if type(value['sessionDays']) is not int or not 1 <= value['sessionDays'] <= 90:
         raise ValueError('登录有效期应为 1–90 天；调整后新登录生效')
+    if 'defaultVideoVisibility' in value and value['defaultVideoVisibility'] not in {'admin', 'all'}:
+        raise ValueError('视频默认可见范围无效')
     return dict(value)
+
+
+def default_visibility(settings, kind=None):
+    """Old installations retain their existing default until explicitly changed."""
+    if kind == 'video':
+        return settings.get('defaultVideoVisibility', settings['defaultVisibility'])
+    return settings['defaultVisibility']
 
 
 def validate_coordinates(value):

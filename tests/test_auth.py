@@ -44,6 +44,7 @@ class AuthTests(unittest.TestCase):
         self.other, session = self.auth.create({'username': 'other', 'password': PASSWORD})
         self.other_token = session[0]
         self.auth.set_visibility(self.owner, self.ids['public.mp4'], {'scope': 'all'}, '')
+        self.auth.set_visibility(self.owner, self.ids['private.mp4'], {'scope': 'admin'}, '')
         self.auth.set_visibility(self.owner, self.ids['selected.png'], {'scope': 'selected', 'users': [self.user['id']]}, '')
         self.server = ThreadingHTTPServer(('127.0.0.1', 0), handler_for(self.app))
         threading.Thread(target=self.server.serve_forever, daemon=True).start()
@@ -168,6 +169,24 @@ class AuthTests(unittest.TestCase):
         self.assertTrue(self.auth.can_view(self.user, 'future-item'))
         self.assertEqual(self.request('/api/auth/register', 'POST', {'username': 'another', 'password': PASSWORD})[0], 403)
         self.assertEqual(self.request('/api/admin/visibility/' + self.ids['private.mp4'], 'PATCH', {'scope': 'selected', 'users': ['missing']}, self.owner_token)[0], 400)
+
+    def test_video_default_keeps_photos_and_explicit_permissions_private(self):
+        video = self.app.root / 'new-video.mp4'; video.write_bytes(b'new video')
+        photo = self.app.root / 'new-photo.png'; photo.write_bytes(b'new photo')
+        self.app.catalog()
+        ids = {item['filename']: item['id'] for item in self.repo.catalog()['items']}
+        # Direct media requests before catalog filtering use the same type default.
+        self.assertEqual(self.request('/media/' + ids['new-video.mp4'], token=self.user_token)[0], 200)
+        self.assertEqual(self.request('/media/' + ids['new-photo.png'], token=self.user_token)[0], 403)
+        catalog = json.loads(self.request('/api/catalog', token=self.user_token)[2])
+        self.assertIn('new-video.mp4', [i['filename'] for i in catalog['items']])
+        self.assertNotIn('new-photo.png', [i['filename'] for i in catalog['items']])
+        self.assertNotIn('private.mp4', [i['filename'] for i in catalog['items']])
+        self.request('/api/admin/settings', 'PATCH', {'registration': True, 'defaultVisibility': 'admin',
+            'defaultVideoVisibility': 'admin', 'sessionDays': 30}, self.owner_token)
+        self.assertTrue(self.auth.can_view(self.user, ids['new-video.mp4'], 'video'))
+        self.assertFalse(self.auth.can_view(self.user, 'future-video', 'video'))
+        self.assertFalse(self.auth.can_view(self.user, ids['new-photo.png'], 'photo'))
 
     def test_audit_visits_rate_limit_and_public_export(self):
         self.request('/media/' + self.ids['public.mp4'], token=self.user_token)
