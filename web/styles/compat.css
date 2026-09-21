@@ -1,0 +1,64 @@
+/* Author: donglixiao. Layout fallbacks for older television WebViews. */
+@supports not (aspect-ratio: 1) {
+  .media-frame {
+    height: 0;
+    padding-bottom: 62.5%;
+  }
+  .media-frame > img,
+  .media-frame > .media-fallback {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .grid-view .media-frame {
+    padding-bottom: 83.33%;
+  }
+  body.tv-mode .media-frame {
+    padding-bottom: 62.5%;
+  }
+}
+@supports not (width: min(1px, 2px)) {
+  .login-shell {
+    width: calc(100% - 48px);
+    max-width: 1060px;
+  }
+  dialog {
+    width: calc(100% - 32px);
+    max-width: 540px;
+  }
+  .viewer-dialog {
+    width: calc(100% - 32px);
+    max-width: 1180px;
+  }
+  .discovery-dialog {
+    width: calc(100% - 32px);
+    max-width: 600px;
+  }
+}
+.legacy-browser dialog {
+  max-height: calc(var(--legacy-height) * 0.9);
+  overflow: auto;
+}
+.legacy-browser .viewer-dialog {
+  max-height: calc(var(--legacy-height) * 0.95);
+}
+.legacy-browser .viewer-media video,
+.legacy-browser .viewer-media img,
+.legacy-browser .viewer-media.zoomed {
+  max-height: calc(var(--legacy-height) * 0.7);
+}
+.legacy-browser .map-dialog {
+  height: var(--legacy-height);
+  max-height: var(--legacy-height);
+  overflow: hidden;
+}
+.legacy-browser .sidebar {
+  height: var(--legacy-height);
+}
+.legacy-browser .viewer-options > * + *,
+.legacy-browser .viewer-tools > * + *,
+.legacy-browser .feed-tabs > * + * {
+  margin-left: 12px;
+}

@@ -1,0 +1,40 @@
+{
+  "compiler": "esbuild 0.25.10",
+  "target": "chrome58",
+  "sources": {
+    "web/js/access-navigation.js": "310eaa28b9412a00680207989b8a2f870b35bd254d8003c862e81c0fb7be9518",
+    "web/js/account.js": "16e58a0d0c87ad7ef4406e0755c4f8678907a1ef00091aa73060c964474565fb",
+    "web/js/admin-system.js": "24b2432eab7db9f30281de8186c95933597bc50c8bf8cb7cccc4b2d6f15ff2b6",
+    "web/js/admin-users.js": "555ff8d97135b3fe08642aee0b4ca5ab8513eba2d9cce8a6faceb8bd266c8744",
+    "web/js/admin-visibility.js": "7d5a4a2b6f093607cab456afcf560c8fd85f1f15132379f243c3386cecaf2973",
+    "web/js/admin.js": "2626e59a00fa3a0a1358f8f46a9ea4ef16f2a70f1ba43fb5e9d7bf84c36b902e",
+    "web/js/api.js": "b4c827e249fdddac5a7fd49de7d203ab27572329e51563fb0570546cb023b967",
+    "web/js/app.js": "110daf28f9da273bc37f7a949f8bc745ebb670744ac9acf61a7a519c559d801e",
+    "web/js/batch.js": "aee75908ec287ade8809f027719b553b6d71380ddc95c72c615120e9e73f2b6b",
+    "web/js/boot.js": "887e9b24a17f13a501f8b85d3f90e8e1d9c9cd1fd42756a6401b95307da75017",
+    "web/js/capture.js": "f817bd3dc9edae2ca2514a612051e74af33e159ef673c1cacc69935225295b87",
+    "web/js/discovery.js": "51b1957fde93a100a221e8e782504764d0a190cafa3e4f28b39525ca216ebe52",
+    "web/js/editor.js": "40b7eac42470c3644b977dbe39a76424fec138fcc2ca01aa2938444625806446",
+    "web/js/feed.js": "5846ab5185086418d105800232fc262506eaab4904d5e0665ea393fe280debd7",
+    "web/js/geo.js": "8506e9ad5a214c502e3a44f27e5a8aa542ea6bb0e2cc7c1925f9fc0b0b29b559",
+    "web/js/icons.js": "7a292266bfccfa1de0034012978bc91deab1f9579aeea74beb7b4ae07c5f6aa2",
+    "web/js/library.js": "2bff58deec1226ff47556c3f0d3d88b6745e3e85eb95939dc8220fde68567c9e",
+    "web/js/login.js": "8e72395e73b4aba2446e1462f5611e5ce806c3060a2ebf0fbba26052f64a6de0",
+    "web/js/map.js": "b599b0a1ee85167f9ac1c0086211720397900c998583b8078a8c1501a1d358ae",
+    "web/js/preferences.js": "1fb02f1c739c477a5009aa93e737b6abe7b18b341a064cb9e610d42d45971705",
+    "web/js/progress.js": "bf8213dad8c0752bd513851d26ed630c35ff2b9a33f757055df14103b7d2999d",
+    "web/js/remote.js": "c25fee9b99291b63438eb97fb56664e7ba0cec49ebcd209cfecb3a6b4460e563",
+    "web/js/session.js": "db0e128211a993a97631fa4f4776b3cd7c78c2491bfb7b17302d11589eafa37d",
+    "web/js/store.js": "60e6391da3f97982ee3b07ca7782a842f08a4ccfbefe10869a7e693f0100f949",
+    "web/js/sync.js": "2d48e47dc1b95acdb7424522b9897c79dd08a15584b9a96fe98142ed531d6bb9",
+    "web/js/tv.js": "c5b5c376201cad8aec5a320d5c2bc3a52304c80ed50fee0fb1eb874fda5ac413",
+    "web/js/utils.js": "b8841f0e66c2d9c5e67324e22f9186e8fa1597fa02eabcf996aeaeca486d7045",
+    "web/js/viewer.js": "1db5b8e653ccac5a3542df1136b599d682d4fc72682bf61364d2b50b58c84268",
+    "scripts/build_web.py": "2c8c82dfcd551ee22c4e85d83d828d73745a61e2a73c0d19945fdd5a009e9152"
+  },
+  "outputs": {
+    "admin.js": "bb7c450337cbde5d240eca2fd98aa748a8ac7ddb49cba4ebb8707368b058ed96",
+    "app.js": "a8f51b34e6e022c21385c8129bfe5209d3f951d1ecccd07c7ab2a0fe46c47c93",
+    "login.js": "5253c77f1e2b41816923ce3cca0c4dae0b228c2ed6cc4cb7b186ce1feac3bb7f"
+  }
+}

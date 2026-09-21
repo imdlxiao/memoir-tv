@@ -4,6 +4,7 @@ import { $, escapeHTML as e, dateLabel, titleOf, safeURL } from './utils.js';
 import { state, filteredItems } from './store.js';
 import { renderSelection } from './batch.js';
 import { readProgress, clockLabel } from './progress.js';
+import { isRemote } from './remote.js';
 function card(item) {
   const name = titleOf(item),
     isVideo = item.kind === 'video';
@@ -11,6 +12,11 @@ function card(item) {
   return `<article class="memory-card" data-id="${e(item.id)}"><header class="card-header"><div class="card-avatar">${icon(isVideo ? 'video' : 'image')}</div><div><span class="card-author">我们的家</span><span class="card-date">${e(dateLabel(item))}</span><div class="card-details">${icon(item.location ? 'pin' : 'leaf')}<span>${e(item.location || (item.dateSource === 'filename' && !item.title ? '从原片日期拾起的回忆' : '一家人的日常'))}</span></div></div><button class="icon-button" data-action="edit" aria-label="编辑${e(name)}" title="补充回忆">${icon('more')}</button></header><div class="card-content"><h3 class="card-title">${e(name)}</h3>${item.description ? `<p class="card-description">${e(item.description)}</p>` : ''}<button class="media-frame" data-action="open" aria-label="${isVideo ? '播放' : '查看'}${e(name)}">${thumbnail ? `<img src="${e(safeURL(thumbnail))}" alt="${e(name)}" loading="lazy" decoding="async">` : `<span class="media-fallback">${icon(isVideo ? 'video' : 'image')}<span>点开这段${isVideo ? '时光' : '回忆'}</span></span>`}${isVideo ? `<span class="play-circle">${icon('play')}</span>` : ''}<span class="media-kind">${icon(isVideo ? 'video' : 'image')}${isVideo ? '家庭影像' : '生活切片'}</span></button>${item.tags?.length ? `<div class="card-tags">${item.tags.map((tag) => `<button class="card-tag" data-action="tag" data-tag="${e(tag)}"># ${e(tag)}</button>`).join('')}</div>` : ''}<footer class="card-actions"><button class="card-action ${item.favorite ? 'favorited' : ''}" data-action="favorite" aria-pressed="${!!item.favorite}" aria-label="${item.favorite ? '取消珍藏' : '珍藏'}${e(name)}">${icon('heart')}<span>${item.favorite ? '已珍藏' : '珍藏'}</span></button><button class="card-action" data-action="edit">${icon('edit')}<span>补充回忆</span></button><button class="card-action" data-action="open" aria-label="放大查看${e(name)}">${icon('expand')}<span>放大看看</span></button></footer></div></article>`;
 }
 export function renderFeed() {
+  const previous = document.activeElement;
+  const cardId = isRemote() ? previous.closest('#feed [data-id]')?.dataset.id : null;
+  const actionIndex = cardId
+    ? [...previous.closest('[data-id]').querySelectorAll('button')].indexOf(previous)
+    : -1;
   const items = filteredItems(),
     feed = $('#feed');
   feed.classList.toggle('grid-view', state.grid);
@@ -71,4 +77,14 @@ export function renderFeed() {
       { once: true },
     ),
   );
+  if (cardId && !previous.isConnected) {
+    const replacement = [...feed.querySelectorAll('[data-id]')].find(
+      (card) => card.dataset.id === cardId,
+    );
+    (
+      replacement?.querySelectorAll('button')[actionIndex] ||
+      feed.querySelector('[data-action="open"]') ||
+      $('#search')
+    ).focus({ preventScroll: true });
+  }
 }

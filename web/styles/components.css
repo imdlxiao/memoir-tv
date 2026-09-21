@@ -397,6 +397,7 @@ dialog {
   border-radius: 20px;
   padding: 0;
   box-shadow: var(--shadow);
+  max-height: 90vh;
   max-height: 90dvh;
   width: min(540px, calc(100% - 32px));
 }
@@ -483,6 +484,7 @@ dialog::backdrop {
   background: #101512;
   border-color: #313a32;
   color: #f3f5ed;
+  max-height: 95vh;
   max-height: 95dvh;
 }
 .viewer-toolbar {
@@ -519,6 +521,7 @@ dialog::backdrop {
 .viewer-media video,
 .viewer-media img {
   width: 100%;
+  max-height: 70vh;
   max-height: 70dvh;
   object-fit: contain;
   display: block;
@@ -638,6 +641,7 @@ dialog::backdrop {
 }
 .tv-mode .viewer-media video,
 .tv-mode .viewer-media img {
+  max-height: 72vh;
   max-height: 72dvh;
 }
 @keyframes arrive {
@@ -754,6 +758,7 @@ dialog::backdrop {
   }
   .viewer-media video,
   .viewer-media img {
+    max-height: 65vh;
     max-height: 65dvh;
   }
   .viewer-tools {

@@ -1,4 +1,49 @@
 /* Author: donglixiao · Account and administration surfaces across screen sizes. */
+.tv-remote :focus {
+  outline: 4px solid #bd8a30 !important;
+  outline-offset: 4px !important;
+  box-shadow: 0 0 0 7px #bd8a3030;
+}
+.tv-remote .topbar-actions > * + * {
+  margin-left: 10px;
+}
+.tv-remote button,
+.tv-remote select,
+.tv-remote input {
+  min-height: 44px;
+}
+@media (min-width: 761px) {
+  .tv-remote .login-shell {
+    width: calc(100% - 48px);
+    max-width: 1060px;
+    margin: 24px auto;
+  }
+  .tv-remote .login-story,
+  .tv-remote .login-card {
+    padding: 24px 32px;
+  }
+  .tv-remote .login-story .access-eyebrow {
+    margin-top: 24px;
+  }
+  .tv-remote .login-story h1 {
+    font-size: 30px;
+    margin: 16px 0;
+  }
+  .tv-remote .login-art {
+    width: 150px;
+    height: 100px;
+    margin: 12px auto;
+  }
+  .tv-remote .login-card h2 {
+    margin: 8px 0;
+  }
+  .tv-remote .access-tabs {
+    margin: 16px 0;
+  }
+  .tv-remote .access-page form {
+    gap: 10px;
+  }
+}
 [hidden] {
   display: none !important;
 }

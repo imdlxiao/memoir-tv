@@ -42,17 +42,21 @@ form.onsubmit = async (event) => {
     button.disabled = false;
   }
 };
-try {
-  const status = await accountRequest('/api/auth/me');
-  if (status.user) location.replace('/');
-  else if (status.setupRequired) {
-    select('setup');
-    document.querySelector('.access-tabs').hidden = true;
-  } else {
-    document.querySelector('#register-tab').hidden = !status.registration;
-    if (new URLSearchParams(location.search).has('expired'))
-      message.textContent = '登录已失效，请重新登录。';
+async function initialize() {
+  try {
+    const status = await accountRequest('/api/auth/me');
+    if (status.user) location.replace('/');
+    else if (status.setupRequired) {
+      select('setup');
+      document.querySelector('.access-tabs').hidden = true;
+    } else {
+      document.querySelector('#register-tab').hidden = !status.registration;
+      if (new URLSearchParams(location.search).has('expired'))
+        message.textContent = '登录已失效，请重新登录。';
+    }
+  } catch (error) {
+    message.textContent = error.message;
   }
-} catch (error) {
-  message.textContent = error.message;
 }
+initialize();
+window.memoirReady = true;

@@ -34,17 +34,21 @@ document.querySelector('.admin-tabs').onclick = (event) => {
   const button = event.target.closest('[data-panel]');
   if (button) open(button.dataset.panel);
 };
-try {
-  const { user } = await accountRequest('/api/auth/me');
-  if (!user) location.replace('/login.html');
-  else if (user.role !== 'admin') location.replace('/?denied=1');
-  else {
-    document.querySelector('#admin-identity').textContent = `${user.username} · 超级管理员`;
-    watchSession();
-    open(
-      new URLSearchParams(location.search).get('panel') === 'visibility' ? 'visibility' : 'users',
-    );
+async function initialize() {
+  try {
+    const { user } = await accountRequest('/api/auth/me');
+    if (!user) location.replace('/login.html');
+    else if (user.role !== 'admin') location.replace('/?denied=1');
+    else {
+      document.querySelector('#admin-identity').textContent = `${user.username} · 超级管理员`;
+      watchSession();
+      open(
+        new URLSearchParams(location.search).get('panel') === 'visibility' ? 'visibility' : 'users',
+      );
+    }
+  } catch (error) {
+    message.textContent = error.message;
   }
-} catch (error) {
-  message.textContent = error.message;
 }
+initialize();
+window.memoirReady = true;

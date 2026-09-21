@@ -185,6 +185,18 @@
 .anniversary-memory svg {
   margin-left: auto;
 }
+.viewer-stage:fullscreen {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background: #152019;
+}
+.viewer-stage:-webkit-full-screen {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background: #152019;
+}
 .viewer-options {
   display: flex;
   align-items: center;
@@ -272,6 +284,7 @@
 }
 .viewer-media.zoomed {
   overflow: auto;
+  max-height: 70vh;
   max-height: 70dvh;
   align-items: flex-start;
   justify-content: flex-start;

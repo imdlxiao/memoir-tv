@@ -352,3 +352,5 @@ refresh()
       `<div class="empty-state">${icon('folder')}<h3>时光簿还没有打开</h3><p>${e(error.message)}。请确认回忆库服务已启动，然后刷新页面。</p><button class="secondary-button" id="retry-load">重新打开</button></div>`;
     $('#retry-load').onclick = () => location.reload();
   });
+
+window.memoirReady = true;

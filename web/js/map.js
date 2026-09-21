@@ -10,7 +10,7 @@ function leaflet() {
   if (!leafletPromise)
     leafletPromise = new Promise((resolve, reject) => {
       const script = document.createElement('script');
-      script.src = new URL('../vendor/leaflet/leaflet.js', import.meta.url).href;
+      script.src = new URL('./vendor/leaflet/leaflet.js', document.baseURI).href;
       script.onload = () => resolve(window.L);
       script.onerror = () => {
         leafletPromise = null;
@@ -23,7 +23,7 @@ function leaflet() {
 }
 function land() {
   if (!landPromise)
-    landPromise = fetch(new URL('../vendor/natural-earth/land.geojson', import.meta.url))
+    landPromise = fetch(new URL('./vendor/natural-earth/land.geojson', document.baseURI))
       .then((response) => {
         if (!response.ok) throw new Error();
         return response.json();
