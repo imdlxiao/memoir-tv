@@ -22,6 +22,24 @@ def atomic_json(path, value):
         temporary.unlink(missing_ok=True)
 
 
+class PlaybackCache:
+    """Versioned derivatives only; source timestamps invalidate stale playback copies."""
+    def __init__(self, directory):
+        self.directory = Path(directory) / 'playback'
+
+    def target(self, identity, source):
+        stat = source.stat()
+        key = hashlib.sha256(f'smooth-v1:{identity}:{source}:{stat.st_size}:{stat.st_mtime_ns}'.encode()).hexdigest()
+        return self.directory / (key + '.mp4')
+
+    def available(self):
+        import shutil
+        self.directory.mkdir(parents=True, exist_ok=True)
+        used = sum(p.stat().st_size for p in self.directory.glob('*.mp4'))
+        # Reserve headroom for a long video and never fill the archive disk.
+        return min(20 * 1024**3 - used, shutil.disk_usage(self.directory).free - 1024**3)
+
+
 class SecurityRepository:
     """Private account state and append-only daily audit, outside the web root."""
     def __init__(self, directory):

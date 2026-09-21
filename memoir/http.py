@@ -90,6 +90,21 @@ def handler_for(app):
 
         def get_resource(self):
             route = unquote(urlsplit(self.path).path)
+            if route.startswith(('/api/playback/', '/playback/')):
+                user = self.identity()
+                identity = route.rsplit('/', 1)[-1]
+                item = app.repository.find(identity)
+                if not app.auth.can_view(user, identity, item.get('kind') if item else None):
+                    raise AccessError('没有这条回忆的查看权限')
+                try:
+                    if route.startswith('/api/'):
+                        return self.json_response(app.playback.status(identity))
+                    _, _, target = app.playback.source(identity)
+                    if target.is_file() and self.command != 'HEAD':
+                        app.auth.viewed(user, identity, self.client_address[0], item.get('title') or item.get('filename', ''))
+                    return self.serve_file(target, 'private, no-store', identity, 'video')
+                except (KeyError, OSError):
+                    return self.json_response({'error': '原片或流畅版不存在'}, 404)
             if route == '/api/auth/me':
                 return self.json_response(app.auth.status(self.token()))
             if route in {'/', '/index.html', '/admin.html'}:
@@ -249,6 +264,12 @@ def handler_for(app):
                     self.set_session()
                     return self.json_response({'ok': True})
                 actor = self.identity()
+                if self.command == 'POST' and route.startswith('/api/playback/'):
+                    identity = route.rsplit('/', 1)[-1]
+                    item = app.repository.find(identity)
+                    if not app.auth.can_view(actor, identity, item.get('kind') if item else None):
+                        raise AccessError('没有这条回忆的查看权限')
+                    return self.json_response(app.playback.request(identity), 202)
                 if self.command == 'POST' and route == '/api/auth/password':
                     app.auth.throttle(ip)
                     app.auth.change_password(actor, value, ip)
@@ -318,4 +339,5 @@ def serve(app, host, port, open_browser=False):
     except KeyboardInterrupt:
         pass
     finally:
+        app.playback.close()
         server.server_close()

@@ -6,10 +6,11 @@ from .scanner import scan
 from .storage import read_json
 from .inventory import DirectoryInventory
 from .auth import AuthService
+from .playback import PlaybackService
 
 
 class Application:
-    def __init__(self, root, repository, web, ffmpeg, exiftool='exiftool'):
+    def __init__(self, root, repository, web, ffmpeg, exiftool='exiftool', playback_encoder='libx264'):
         self.root = Path(root).resolve()
         self.repository, self.web, self.ffmpeg = repository, Path(web).resolve(), ffmpeg
         self.exiftool = exiftool
@@ -19,6 +20,7 @@ class Application:
         self.inventory = DirectoryInventory(self.root)
         self.last_check = 0
         self.auth = AuthService(repository.directory)
+        self.playback = PlaybackService(self.root, repository, ffmpeg, playback_encoder)
 
     def _synchronize(self, force=False, background=False, snapshot=True):
         # Never hold this lock while decoding video. A page refresh must not wait

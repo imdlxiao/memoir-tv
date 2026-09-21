@@ -61,11 +61,13 @@ def main():
     else:
         if not repository.index_path.exists():
             repository.replace_index(scan(media, repository.directory, ffmpeg, previews=False))
-        app = Application(media, repository, ROOT / 'web', ffmpeg, exiftool)
+        app = Application(media, repository, ROOT / 'web', ffmpeg, exiftool, config.get('playback_encoder', 'libx264'))
         app.secure_cookies = config.get('secure_cookies', False) is True
         if not app.auth.store.state['users']:
             print(f'首次创建超级管理员：请在登录页填写本机初始化码，文件位置：{app.auth.store.setup_path}', flush=True)
         app.start_scan()
+        if config.get('playback_prewarm', False):
+            app.playback.warm()
         serve(app, args.host or config.get('host', '127.0.0.1'), args.port or config.get('port', 8765), args.open)
 
 

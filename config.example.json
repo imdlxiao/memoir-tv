@@ -5,5 +5,7 @@
   "port": 8765,
   "secure_cookies": false,
   "ffmpeg": "ffmpeg",
-  "exiftool": "exiftool"
+  "exiftool": "exiftool",
+  "playback_encoder": "libx264",
+  "playback_prewarm": false
 }
