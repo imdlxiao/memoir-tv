@@ -19,6 +19,7 @@ from memoir.scanner import scan
 from memoir.storage import Repository
 from playwright.sync_api import sync_playwright, expect
 from browser_support import launch_browser
+from auth_support import browser_owner
 
 
 def main():
@@ -37,6 +38,7 @@ def main():
             with sync_playwright() as p:
                 browser = launch_browser(p)
                 page = browser.new_page(viewport={'width':1440, 'height':1050})
+                browser_owner(page, server, repository)
                 errors = []
                 page.on('pageerror', lambda error: errors.append(str(error)))
                 page.goto(f'http://127.0.0.1:{server.server_port}')
@@ -108,7 +110,7 @@ def main():
                 expect(page.locator('html')).to_have_attribute('data-theme','dark')
                 assert not errors, errors
                 # A nested, entirely static site must preserve edits without an API.
-                export_static(ROOT / 'web', repository, media, '../media/', root / 'album')
+                export_static(ROOT / 'web', repository, media, '../media/', root / 'album', allow_public=True)
                 static_server = ThreadingHTTPServer(('127.0.0.1', 0), partial(SimpleHTTPRequestHandler, directory=str(root)))
                 threading.Thread(target=static_server.serve_forever, daemon=True).start()
                 try:

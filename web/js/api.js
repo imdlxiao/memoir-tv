@@ -13,6 +13,7 @@ async function request(path, method = 'GET', body) {
     cache: 'no-store',
   });
   if (!response.ok) {
+    if (response.status === 401) location.replace('/login.html?expired=1');
     let message = `请求失败 (${response.status})`;
     try {
       message = (await response.json()).error || message;
@@ -35,6 +36,7 @@ async function requestCatalog(path, background) {
   });
   if (response.status === 304 && catalogCache) return { ...catalogCache, unchanged: true };
   if (!response.ok) {
+    if (response.status === 401) location.replace('/login.html?expired=1');
     const value = await response.json().catch(() => ({}));
     throw new Error(value.error || `读取回忆失败 (${response.status})`);
   }

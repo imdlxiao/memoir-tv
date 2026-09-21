@@ -23,12 +23,16 @@ export function renderFeed() {
       favorites: ['把舍不得的瞬间，珍藏起来', '轻点回忆下的爱心，下次想念时就能更快找到。'],
       undated: ['每段回忆，都找到了日期', '所有回忆已有拍摄日期，继续去看看那些好时光吧。'],
     };
-    const [title, description] = filtered
+    let [title, description] = filtered
       ? ['还没找到这个瞬间', '试试其他关键词，或者清除筛选再看看。']
       : messages[state.view === 'all' ? state.type : state.view] || [
           '时光簿，等你来填满',
           '把视频或照片放进素材目录，再到管理回忆库中刷新。',
         ];
+    if (!state.items.length && state.user?.role === 'user') {
+      title = '回忆的位置，为你留着';
+      description = '还没有向你开放的回忆。家人分享后，它们就会出现在这里。';
+    }
     feed.innerHTML = `<div class="empty-state">${icon(filtered ? 'search' : 'leaf')}<h3>${title}</h3><p>${description}</p><button class="secondary-button" data-action="reset">看看所有回忆</button></div>`;
   } else feed.innerHTML = items.slice(0, state.limit).map(card).join('');
   $('#load-more').hidden = items.length <= state.limit;

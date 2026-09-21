@@ -15,6 +15,7 @@ import { attachProgress, clockLabel } from './progress.js';
 import { preferences, savePreference } from './preferences.js';
 import { captureHTML } from './capture.js';
 import { validCoordinates } from './geo.js';
+import { canEdit } from './account.js';
 
 let playlist = [],
   index = 0,
@@ -75,6 +76,7 @@ function render() {
   // Keep the summary first so the native disclosure remains keyboard accessible.
   details.prepend($('summary', details));
   $('[data-capture-map]', dialog).onclick = () => {
+    if (!validCoordinates(item.coordinates) && !canEdit()) return toast('这条回忆尚未添加拍摄位置');
     dialog.close();
     document.dispatchEvent(
       new CustomEvent(validCoordinates(item.coordinates) ? 'memoir:map' : 'memoir:edit', {
@@ -112,7 +114,7 @@ function render() {
     detachProgress?.();
     detachProgress = null;
     $('.viewer-media', dialog).innerHTML =
-      `<div class="viewer-error"><p>这份原片暂时无法打开。文件可能已移出，或当前浏览器不支持它的编码；可以下载后用本地播放器查看。</p><a href="${e(mediaURL(item))}" download="${e(item.filename)}">下载原片</a></div>`;
+      `<div class="viewer-error"><p>这份原片暂时无法打开。查看权限可能已变更、文件已移出，或浏览器不支持该编码。请返回首页刷新；可见的原片也可下载后查看。</p><a href="${e(mediaURL(item))}" download="${e(item.filename)}">下载原片</a></div>`;
   });
   if (video) {
     media.playbackRate = speed;

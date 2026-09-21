@@ -1,0 +1,37 @@
+<!doctype html>
+<!-- Author: donglixiao · memoir-tv administration. -->
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>家庭空间管理 · memoir-tv</title>
+    <link rel="icon" href="./assets/mark.svg" />
+    <link rel="stylesheet" href="./styles/tokens.css" />
+    <link rel="stylesheet" href="./styles/access.css" />
+    <script type="module" src="./js/admin.js"></script>
+  </head>
+  <body class="access-page">
+    <main class="admin-shell">
+      <header class="admin-header">
+        <a class="access-brand" href="./"><img src="./assets/mark.svg" alt="" />memoir-tv</a
+        ><a href="./">← 返回回忆流</a>
+      </header>
+      <section class="admin-intro">
+        <div>
+          <span class="access-eyebrow">CARE FOR YOUR FAMILY SPACE</span>
+          <h1>让回忆，恰好被看见。</h1>
+          <p>管理家人账号，为每段影像选择分享的人。</p>
+        </div>
+        <span id="admin-identity" class="admin-meta"></span>
+      </section>
+      <nav class="access-tabs admin-tabs" aria-label="管理栏目">
+        <button data-panel="users" aria-pressed="true">家人账号</button
+        ><button data-panel="visibility" aria-pressed="false">内容可见范围</button
+        ><button data-panel="logs" aria-pressed="false">访问与操作日志</button
+        ><button data-panel="settings" aria-pressed="false">基础设置</button>
+      </nav>
+      <p id="admin-message" class="access-message" role="status" aria-live="polite"></p>
+      <section id="admin-content" aria-live="polite"></section>
+    </main>
+  </body>
+</html>

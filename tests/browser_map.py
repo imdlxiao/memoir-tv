@@ -17,6 +17,7 @@ from memoir.scanner import scan
 from memoir.storage import Repository
 from playwright.sync_api import sync_playwright, expect
 from browser_support import launch_browser
+from auth_support import browser_owner
 
 
 def main():
@@ -44,6 +45,7 @@ def main():
                 with sync_playwright() as p:
                     browser = launch_browser(p)
                     page = browser.new_page(viewport={'width': 1440, 'height': 1000})
+                    browser_owner(page, server, repository)
                     errors, external = [], []
                     fail_tiles = False
                     page.on('pageerror', lambda error: errors.append(str(error)))
@@ -135,7 +137,7 @@ def main():
                       return [clusterPoints(points,p=>p,80).map(g=>g.items.length),validCoordinates({latitude:true,longitude:0})];
                     }""")
                     assert result == [[2,1], False], result
-                    export_static(ROOT / 'web', repository, media, '../media/', root / 'album')
+                    export_static(ROOT / 'web', repository, media, '../media/', root / 'album', allow_public=True)
                     static = ThreadingHTTPServer(('127.0.0.1', 0), partial(SimpleHTTPRequestHandler, directory=str(root)))
                     threading.Thread(target=static.serve_forever, daemon=True).start()
                     try:

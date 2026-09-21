@@ -13,6 +13,7 @@ import { initializeBatch, toggleSelection } from './batch.js';
 import { initializeDiscovery, updateDiscovery } from './discovery.js';
 import { preferences, savePreference } from './preferences.js';
 import { openMap } from './map.js';
+import { initializeAccount, canEdit } from './account.js';
 
 const viewNames = {
   all: '所有回忆',
@@ -104,6 +105,8 @@ async function refresh(background = false) {
     return catalog;
   state.items = catalog.items;
   state.mode = catalog.mode;
+  state.user = catalog.user;
+  document.documentElement.dataset.role = catalog.user?.role || 'admin';
   appliedCatalogRevision = catalog.revision;
   render();
   return catalog;
@@ -157,13 +160,15 @@ initializeViewer();
 initializeTV();
 initializeBatch(renderFeed, refresh);
 initializeDiscovery();
-const editFromMap = (item) =>
-  editMemory(item, () => refresh().catch((error) => toast(error.message)));
+const editFromMap = (item) => {
+  if (canEdit()) editMemory(item, () => refresh().catch((error) => toast(error.message)));
+  else toast('仅超级管理员可以编辑回忆');
+};
 const atlas = (focusId) =>
   openMap(focusId ? state.items : filteredItems(), {
     focusId,
     onOpen: openViewer,
-    onEdit: editFromMap,
+    onEdit: canEdit() ? editFromMap : undefined,
   });
 $('#map-button').onclick = () => atlas();
 $('#map-shortcut').onclick = () => atlas();
@@ -302,6 +307,7 @@ $('#feed').onclick = async (event) => {
   }
   const item = state.items.find((i) => i.id === button.closest('[data-id]')?.dataset.id);
   if (!item) return;
+  if (['edit', 'favorite', 'select'].includes(button.dataset.action) && !canEdit()) return;
   if (button.dataset.action === 'select' || (state.selecting && button.dataset.action === 'open')) {
     toggleSelection(item.id, renderFeed);
     return;
@@ -336,7 +342,8 @@ document.addEventListener('keydown', (event) => {
   }
 });
 refresh()
-  .then(() => {
+  .then((catalog) => {
+    initializeAccount(catalog.user);
     if (state.mode === 'library') startLibrarySync(() => refresh(true));
   })
   .catch((error) => {
