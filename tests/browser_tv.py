@@ -73,6 +73,7 @@ def main():
             expect(page.locator('[data-remote-forward]')).to_be_focused()
             page.keyboard.press('Enter')
             page.wait_for_function('document.querySelector("video").currentTime >= 10')
+            page.locator('[data-player-settings]').click()
             page.locator('[data-speed]').focus()
             page.keyboard.press('ArrowRight')
             assert page.evaluate('document.querySelector("video").playbackRate') == 1.25
@@ -80,6 +81,8 @@ def main():
             for key in ['ArrowDown', 'ArrowDown', 'ArrowRight', 'ArrowUp']:
                 page.keyboard.press(key)
                 assert page.evaluate('!!document.activeElement.closest("#viewer-dialog")')
+            page.keyboard.press('Escape')
+            expect(page.locator('.cinema-panel')).not_to_be_visible()
             page.keyboard.press('Escape')
             expect(page.locator('#viewer-dialog')).not_to_be_visible()
             page.goto(base + '/admin.html' + ('?compat=1' if legacy else ''))

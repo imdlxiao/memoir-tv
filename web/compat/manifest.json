@@ -13,6 +13,7 @@
     "web/js/batch.js": "aee75908ec287ade8809f027719b553b6d71380ddc95c72c615120e9e73f2b6b",
     "web/js/boot.js": "dd478d73a7c3caf5fb0854821405e23715b22199d1a1ffd89b1e65efa632220c",
     "web/js/capture.js": "f817bd3dc9edae2ca2514a612051e74af33e159ef673c1cacc69935225295b87",
+    "web/js/cinema.js": "52147b3deddac341cee964b779a55f1d22e77594312888394fef034774fff454",
     "web/js/discovery.js": "51b1957fde93a100a221e8e782504764d0a190cafa3e4f28b39525ca216ebe52",
     "web/js/editor.js": "40b7eac42470c3644b977dbe39a76424fec138fcc2ca01aa2938444625806446",
     "web/js/feed.js": "5846ab5185086418d105800232fc262506eaab4904d5e0665ea393fe280debd7",
@@ -25,18 +26,18 @@
     "web/js/playback.js": "78236f9cbc1d0703c02e13e437b9f3e7f129135082631915810e89e642b85d8c",
     "web/js/preferences.js": "1fb02f1c739c477a5009aa93e737b6abe7b18b341a064cb9e610d42d45971705",
     "web/js/progress.js": "bf8213dad8c0752bd513851d26ed630c35ff2b9a33f757055df14103b7d2999d",
-    "web/js/remote.js": "c25fee9b99291b63438eb97fb56664e7ba0cec49ebcd209cfecb3a6b4460e563",
+    "web/js/remote.js": "60cb2a127ca1ec59a192cfd0c1c445bfb676638724db5ad637c7d80c11359b5c",
     "web/js/session.js": "db0e128211a993a97631fa4f4776b3cd7c78c2491bfb7b17302d11589eafa37d",
     "web/js/store.js": "60e6391da3f97982ee3b07ca7782a842f08a4ccfbefe10869a7e693f0100f949",
     "web/js/sync.js": "2d48e47dc1b95acdb7424522b9897c79dd08a15584b9a96fe98142ed531d6bb9",
     "web/js/tv.js": "c5b5c376201cad8aec5a320d5c2bc3a52304c80ed50fee0fb1eb874fda5ac413",
     "web/js/utils.js": "b8841f0e66c2d9c5e67324e22f9186e8fa1597fa02eabcf996aeaeca486d7045",
-    "web/js/viewer.js": "4c778a119f934469ddb4ff3ba2a62aab4485f1cc65826a1200da36acb72028c7",
+    "web/js/viewer.js": "c4c993127629bc1aaf15e99b5ecb63aabc6ac3d9044c257ad19fcc1cca71b003",
     "scripts/build_web.py": "2c8c82dfcd551ee22c4e85d83d828d73745a61e2a73c0d19945fdd5a009e9152"
   },
   "outputs": {
-    "admin.js": "bb7c450337cbde5d240eca2fd98aa748a8ac7ddb49cba4ebb8707368b058ed96",
-    "app.js": "b928c1bb3692782a76c9a60a5bf119cb2a6a347a001f6e80ab7fc592ec6d9a37",
-    "login.js": "5253c77f1e2b41816923ce3cca0c4dae0b228c2ed6cc4cb7b186ce1feac3bb7f"
+    "admin.js": "cf358f7772b516271d6ae8542766235cb7240ce77100840f6cbbcc4514d7926f",
+    "app.js": "0f56759e2d276a5047f6d6bfbec4ee57ef9e7545529f62e97cedeb5fb1a4a7d2",
+    "login.js": "465a9b8e5656dc363a8f7560b402557e45d25c7f93971fc1c52865dcd4982107"
   }
 }

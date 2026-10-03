@@ -33,3 +33,4 @@ jobs:
       - run: python tests/browser_auth.py
       - run: python tests/browser_tv.py
       - run: python tests/browser_playback.py
+      - run: python tests/browser_cinema.py

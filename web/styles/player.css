@@ -1,0 +1,435 @@
+/* Author: donglixiao · Immersive playback for television remotes and fullscreen browsers. */
+body .viewer-dialog.cinema-dialog {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: auto;
+  left: 0;
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  height: var(--viewport-height, 100vh);
+  min-height: 0;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  overflow: hidden;
+  background: #000;
+  color: #f8faf9;
+}
+.viewer-dialog.cinema-dialog::backdrop {
+  background: #000;
+  backdrop-filter: none;
+}
+body .viewer-stage.cinema {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: var(--viewport-height, 100vh);
+  min-height: 0;
+  max-height: none;
+  overflow: hidden;
+  background: #000;
+  color: #f8faf9;
+  font-size: 17px;
+  line-height: 1.4;
+  outline: none;
+}
+body .viewer-stage.cinema:fullscreen {
+  width: 100%;
+  height: var(--viewport-height, 100vh);
+  overflow: hidden;
+  background: #000;
+}
+body .viewer-stage.cinema:-webkit-full-screen {
+  width: 100%;
+  height: var(--viewport-height, 100vh);
+  overflow: hidden;
+  background: #000;
+}
+body .viewer-stage.cinema .viewer-media {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  max-height: none;
+  background: #000;
+  overflow: hidden;
+}
+body .viewer-stage.cinema .viewer-media video,
+body .viewer-stage.cinema .viewer-media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  max-height: none;
+  max-width: none;
+  margin: 0;
+  object-fit: contain;
+}
+body .viewer-stage.cinema.cinema-fill .viewer-media video,
+body .viewer-stage.cinema.cinema-fill .viewer-media img {
+  object-fit: cover;
+}
+body .viewer-stage.cinema .viewer-media.zoomed {
+  overflow: auto;
+}
+body .viewer-stage.cinema .viewer-media.zoomed img {
+  width: auto;
+  height: auto;
+  min-width: 100%;
+  object-fit: contain;
+}
+.viewer-stage.cinema .viewer-toolbar,
+.viewer-stage.cinema .cinema-controls,
+.viewer-stage.cinema .resume-notice {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  right: 0;
+  visibility: visible;
+  opacity: 1;
+  transition: opacity 160ms ease;
+}
+.viewer-stage.cinema .viewer-toolbar {
+  top: 0;
+  align-items: flex-start;
+  padding: 24px 32px 52px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.82), transparent);
+  pointer-events: none;
+}
+.viewer-stage.cinema .viewer-toolbar > div:first-child {
+  min-width: 0;
+  margin-right: 20px;
+  text-shadow: 0 1px 6px #000;
+}
+.viewer-stage.cinema .viewer-toolbar h2 {
+  margin: 0 0 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 23px;
+  font-weight: 600;
+}
+.viewer-stage.cinema .viewer-toolbar p {
+  margin: 0;
+  font-size: 15px;
+  color: #d2dad7;
+}
+.viewer-stage.cinema .viewer-tools {
+  flex-shrink: 0;
+  gap: 0;
+  pointer-events: auto;
+}
+.viewer-stage.cinema .viewer-tools > * + * {
+  margin-left: 12px;
+}
+.viewer-stage.cinema .cinema-controls {
+  bottom: 0;
+  padding: 48px 32px 24px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.94), rgba(0, 0, 0, 0.56) 65%, transparent);
+}
+.viewer-stage.cinema .cinema-progress {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+  margin-bottom: 14px;
+}
+.viewer-stage.cinema [data-player-seek] {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+  height: 26px;
+  padding: 0;
+  margin: 0 20px 0 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  accent-color: #a6e5ce;
+  cursor: pointer;
+}
+.viewer-stage.cinema [data-player-time] {
+  flex-shrink: 0;
+  min-width: 110px;
+  color: #f5f7f6;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+.viewer-stage.cinema .cinema-buttons {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+.viewer-stage.cinema .cinema-buttons > * + * {
+  margin-left: 10px;
+}
+.viewer-stage.cinema .cinema-buttons button,
+.viewer-stage.cinema .viewer-tools button,
+.viewer-stage.cinema .cinema-panel button,
+.viewer-stage.cinema .cinema-panel select,
+.viewer-stage.cinema .resume-notice button {
+  min-height: 44px;
+  padding: 9px 14px;
+  border: 1px solid #65766e;
+  border-radius: 10px;
+  background: #1b2722;
+  color: #f8faf9;
+  font-size: 16px;
+  line-height: 1.4;
+}
+.viewer-stage.cinema .cinema-buttons button {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+.viewer-stage.cinema .cinema-buttons svg {
+  width: 18px;
+  height: 18px;
+}
+.viewer-stage.cinema .cinema-buttons [data-previous] svg {
+  margin-right: 4px;
+}
+.viewer-stage.cinema .cinema-buttons [data-next] svg {
+  margin-left: 4px;
+}
+.viewer-stage.cinema .viewer-tools button {
+  width: 46px;
+  height: 46px;
+  padding: 10px;
+  background: rgba(27, 39, 34, 0.84);
+}
+.viewer-stage.cinema .cinema-buttons .cinema-count {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0 4px;
+  color: #cdd9d2;
+  font-size: 15px;
+  text-align: center;
+  white-space: nowrap;
+}
+.viewer-stage.cinema .cinema-count .viewer-hint {
+  display: none;
+}
+.viewer-stage.cinema button:disabled {
+  opacity: 0.4;
+}
+.viewer-stage.cinema button:focus,
+.viewer-stage.cinema select:focus,
+.viewer-stage.cinema input:focus,
+.viewer-stage.cinema summary:focus,
+.viewer-stage.cinema a:focus {
+  outline: 3px solid #b6f4df;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 1px #071b15;
+}
+.viewer-stage.cinema button:focus,
+.viewer-stage.cinema select:focus {
+  background: #b6f4df;
+  color: #08251b;
+}
+.viewer-stage.cinema .cinema-panel {
+  position: absolute;
+  z-index: 4;
+  top: 84px;
+  right: 28px;
+  bottom: 154px;
+  width: 380px;
+  max-width: calc(100% - 56px);
+  padding: 22px;
+  overflow: auto;
+  border: 1px solid #52675c;
+  border-radius: 16px;
+  background: #13211b;
+  background: rgba(19, 33, 27, 0.98);
+  box-shadow: 0 16px 48px #0008;
+  font-size: 16px;
+  overscroll-behavior: contain;
+}
+.viewer-stage.cinema .cinema-panel h3 {
+  padding-right: 62px;
+  margin: 0 0 24px;
+  font-size: 21px;
+  line-height: 44px;
+}
+.viewer-stage.cinema [data-player-settings-close] {
+  position: absolute;
+  top: 20px;
+  right: 22px;
+}
+.viewer-stage.cinema .cinema-panel .viewer-options {
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 16px;
+  color: #edf4ef;
+}
+.viewer-stage.cinema .cinema-panel .viewer-options > * {
+  width: 100%;
+  margin: 0 0 16px;
+}
+.viewer-stage.cinema .cinema-panel label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.viewer-stage.cinema .cinema-panel label select {
+  min-width: 0;
+  max-width: 75%;
+  margin-left: 12px;
+}
+.viewer-stage.cinema .cinema-panel .playback-note,
+.viewer-stage.cinema .cinema-panel [data-playback-status] {
+  display: block;
+  width: auto;
+  padding: 0;
+  margin: 0 0 18px;
+  color: #b9cfc2;
+  font-size: 14px;
+  line-height: 1.7;
+  overflow-wrap: break-word;
+}
+.viewer-stage.cinema .cinema-panel .viewer-details,
+.viewer-stage.cinema .cinema-panel .playback-details {
+  margin: 18px 0 0;
+  padding-top: 16px;
+  border-color: #405749;
+  color: #cadcd0;
+  font-size: 15px;
+}
+.viewer-stage.cinema .cinema-panel summary {
+  width: auto;
+  padding: 8px 4px;
+  color: #edf4ef;
+  font-size: 16px;
+}
+.viewer-stage.cinema .cinema-panel dd,
+.viewer-stage.cinema .cinema-panel [data-playback-metrics],
+.viewer-stage.cinema .cinema-panel [data-playback-test-result] {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+.viewer-stage.cinema .resume-notice {
+  top: 104px;
+  left: 32px;
+  right: auto;
+  max-width: calc(100% - 64px);
+  padding: 10px 14px;
+  border: 1px solid #577263;
+  border-radius: 12px;
+  background: #152e22;
+  font-size: 15px;
+}
+.viewer-stage.cinema .resume-notice button {
+  margin-left: 14px;
+  text-decoration: none;
+}
+.viewer-stage.cinema.cinema-idle .viewer-toolbar,
+.viewer-stage.cinema.cinema-idle .cinema-controls,
+.viewer-stage.cinema.cinema-idle .resume-notice {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+.viewer-stage.cinema [hidden] {
+  display: none !important;
+}
+@media (max-width: 1000px), (max-height: 600px) {
+  .viewer-stage.cinema .viewer-toolbar {
+    padding: 18px 24px 42px;
+  }
+  .viewer-stage.cinema .viewer-toolbar h2 {
+    font-size: 20px;
+  }
+  .viewer-stage.cinema .cinema-controls {
+    padding: 36px 24px 18px;
+  }
+  .viewer-stage.cinema .cinema-progress {
+    margin-bottom: 10px;
+  }
+  .viewer-stage.cinema .cinema-buttons > * + * {
+    margin-left: 8px;
+  }
+  .viewer-stage.cinema .cinema-buttons button {
+    padding: 8px 10px;
+    font-size: 15px;
+  }
+  .viewer-stage.cinema .cinema-panel {
+    top: 76px;
+    right: 24px;
+    bottom: 136px;
+    padding: 18px;
+  }
+  .viewer-stage.cinema [data-player-settings-close] {
+    top: 18px;
+    right: 18px;
+  }
+  .viewer-stage.cinema .resume-notice {
+    top: 88px;
+    left: 24px;
+  }
+}
+@media (max-width: 700px) {
+  .viewer-stage.cinema .viewer-toolbar {
+    padding: 16px 16px 36px;
+  }
+  .viewer-stage.cinema .viewer-toolbar h2 {
+    font-size: 17px;
+  }
+  .viewer-stage.cinema .viewer-toolbar p {
+    font-size: 12px;
+  }
+  .viewer-stage.cinema .cinema-controls {
+    padding: 32px 16px 16px;
+  }
+  .viewer-stage.cinema .cinema-buttons {
+    flex-wrap: wrap;
+  }
+  .viewer-stage.cinema .cinema-buttons > * {
+    margin-top: 8px;
+  }
+  .viewer-stage.cinema .cinema-buttons button {
+    padding: 8px;
+    font-size: 13px;
+  }
+  .viewer-stage.cinema .cinema-buttons .cinema-count {
+    display: none;
+  }
+  .viewer-stage.cinema .cinema-panel {
+    top: 76px;
+    right: 16px;
+    bottom: 158px;
+    width: calc(100% - 32px);
+    max-width: 380px;
+  }
+  .viewer-stage.cinema .resume-notice {
+    left: 16px;
+    max-width: calc(100% - 32px);
+    font-size: 13px;
+  }
+}
+@media (max-height: 480px) {
+  .viewer-stage.cinema .cinema-panel {
+    top: 12px;
+    right: 16px;
+    bottom: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .viewer-stage.cinema .viewer-toolbar,
+  .viewer-stage.cinema .cinema-controls,
+  .viewer-stage.cinema .resume-notice {
+    transition: none;
+  }
+}

@@ -69,3 +69,39 @@
 .legacy-browser .feed-tabs > * + * {
   margin-left: 12px;
 }
+
+/* Author: donglixiao · 电视放映室弹性撑满：不依赖 vh，避免旧 WebView 把视口算偏后视频缩成中间一小条。 */
+body.tv-mode .viewer-dialog {
+  width: 100%;
+  max-width: none;
+  border-radius: 0;
+  height: var(--viewport-height, 100vh);
+  max-height: var(--viewport-height, 100vh);
+}
+body.tv-mode .viewer-stage {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+body.tv-mode .viewer-media {
+  flex: 1 1 auto;
+  min-height: 0;
+  background: #000;
+}
+body.tv-mode .viewer-media video,
+body.tv-mode .viewer-media img {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  object-fit: contain;
+}
+body.tv-mode .viewer-options,
+body.tv-mode .viewer-footer,
+body.tv-mode .viewer-toolbar,
+body.tv-mode .resume-notice,
+body.tv-mode .viewer-details,
+body.tv-mode .playback-details,
+body.tv-mode [data-playback-status] {
+  flex-shrink: 0;
+}

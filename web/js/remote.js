@@ -3,6 +3,10 @@ const tvAgent = /TVBrowser|Android TV|SmartTV|SMART-TV|GoogleTV|HbbTV/i.test(nav
 let enabled = tvAgent;
 let lastFocus = null;
 let entered = false;
+let playerRemote = null;
+export function setPlayerRemote(handler) {
+  playerRemote = handler;
+}
 const selectors = 'button,a[href],input,textarea,select,summary,[tabindex],[role="button"]';
 export function enableRemote(value = true) {
   enabled = value || tvAgent;
@@ -10,7 +14,8 @@ export function enableRemote(value = true) {
 }
 function scope() {
   const dialogs = [...document.querySelectorAll('dialog[open]')];
-  return dialogs[dialogs.length - 1] || document;
+  const root = dialogs[dialogs.length - 1] || document;
+  return root.querySelector('.cinema-panel:not([hidden])') || root;
 }
 function targets(root = scope()) {
   return [...root.querySelectorAll(selectors)].filter((node) => {
@@ -33,6 +38,8 @@ function focus(node) {
 }
 export function handleRemoteKey(key) {
   if (!enabled) enableRemote();
+  const playerResult = playerRemote?.(key);
+  if (playerResult) return playerResult;
   const root = scope();
   const current = document.activeElement;
   const choices = targets(root);
@@ -56,7 +63,7 @@ export function handleRemoteKey(key) {
     return 'unhandled';
   }
   if (key.startsWith('Media')) {
-    const video = root.querySelector('video');
+    const video = (root.closest?.('dialog') || root).querySelector('video');
     if (video) {
       if (key === 'MediaFastForward' && Number.isFinite(video.duration))
         video.currentTime = Math.min(video.duration, video.currentTime + 10);
@@ -127,6 +134,8 @@ document.addEventListener(
         'ArrowDown',
         'ArrowLeft',
         'ArrowRight',
+        'Enter',
+        ' ',
         'Escape',
         'GoBack',
         'BrowserBack',
