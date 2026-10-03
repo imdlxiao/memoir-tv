@@ -27,6 +27,26 @@
 
 Windows 防火墙阻止连接时，在**管理员 PowerShell** 中运行项目的 `scripts/Enable-LanAccess.ps1`。脚本针对当前 Python、默认网关所在网卡、TCP 8765 和本地子网添加放行规则；如果已有 Python 的全端口 TCP 阻止规则，仅从该规则排除 8765，其余端口与 UDP 阻止规则保留。不会关闭防火墙或更改网络类别。修改防火墙需要操作系统管理员权限；使用其他端口时需相应调整脚本。
 
+### Windows 登录后自动启动
+
+在项目目录运行一次，无需管理员权限：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Enable-Autostart.ps1
+```
+
+脚本登记当前用户的 `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` 下 `memoir-tv` 项，并立即静默启动网站。之后该用户登录 Windows 时会自动启动，不弹命令窗口或浏览器。这里是**登录后自启**，并非电脑停在登录界面时也运行；Windows 可能稍后才启动登录项，见 [Microsoft Run 注册表说明](https://learn.microsoft.com/en-us/windows/win32/setupapi/run-and-runonce-registry-keys)。
+
+启动项记录 Python 和项目脚本的绝对路径，沿用 `config.local.json`。后台入口 `scripts/start_background.py` 持有系统文件锁防止重复启动；若端口已有服务，则直接退出。原片目录尚未就绪时最多等待两分钟，仍不可用就停止并记录错误，避免将未挂载的素材盘当空目录扫描。日志位于不入库的 `.local/startup.log`；下次启动时超过 2 MB 的旧日志移至 `startup.previous.log`。
+
+修改项目或 Python 安装位置后，需要重新配置启动项。关闭自启可运行：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Enable-Autostart.ps1 -Disable
+```
+
+关闭自启不会终止当前网站。电脑须保持开机且未睡眠；此设置不修改休眠或防火墙规则，也不解决电视对 `.local` 名称的解析限制。
+
 ### 收藏固定网址
 
 优先尝试 `http://电脑名称.local:8765/`，电脑名称可运行 `hostname` 查看。名称和端口不变时，收藏夹地址不需要跟随 DHCP 分配的 IP 修改。mDNS 通过同一局域网的组播解析 `.local` 名称，无需购买域名或地图 Key；协议说明见 [RFC 6762](https://www.rfc-editor.org/rfc/rfc6762)。
